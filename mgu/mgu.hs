@@ -1,16 +1,16 @@
 {-# OPTIONS_GHC -Wno-incomplete-patterns #-}
-import Data.List ()
 --data Term = Var Int | Funct String Int [Term]
 data Term t = Var t | Func t [Term t] deriving (Show, Eq)
--- A term-tree is either a variable or a function applied to a list of Terms.
+-- A term is either a variable or a function applied to a list of Terms.
 -- Example:
--- The term-tree corresponding to f(g(x), h(y,z)) is drawn as
+-- f(g(x), h(y,z)) is a term. Its corresponding tree is drawn as
 --              f
 --             /  \
 --            g    h
 --            |   / \
 --            x  y   z
 -- which will be encoded as
+-- This term will is written as
 -- Func 'f' [Func 'g' [Var 'x'], Func 'h' [Var 'y', Var 'z']]
 
 --let t = Func "f" [(Func "g" [Var 1]), (Func "h" [Var 2, Var 3])]
