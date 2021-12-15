@@ -1,5 +1,4 @@
 {-# OPTIONS_GHC -Wno-incomplete-patterns #-}
---data Term = Var Int | Funct String Int [Term]
 data Term t = Var t | Func t [Term t] deriving (Show, Eq)
 -- A term is either a variable or a function applied to a list of Terms.
 -- Example:
@@ -9,11 +8,12 @@ data Term t = Var t | Func t [Term t] deriving (Show, Eq)
 --            g    h
 --            |   / \
 --            x  y   z
--- which will be encoded as
--- This term will is written as
+-- This term is encoded by
 -- Func 'f' [Func 'g' [Var 'x'], Func 'h' [Var 'y', Var 'z']]
 
---let t = Func "f" [(Func "g" [Var 1]), (Func "h" [Var 2, Var 3])]
+-- Suggestions Deivid
+-- data Term = Var Int | Funct String Int [Term]
+-- let t = Func "f" [(Func "g" [Var 1]), (Func "h" [Var 2, Var 3])]
 
 type Substitution t = [(Term t, Term t)]
 -- Note that working with sets instead of lists is would actually be better.
@@ -42,7 +42,8 @@ varin u v = False --This last case is needed for avoiding non-exhaustive pattern
 -- yields False
 
 substitute :: Eq t => Term t -> Term t -> Term t -> Term t
--- intuition: substitute x s t = t[x:=s]
+-- substitute x s t substitutes x|->s in t.
+-- So substitute x s t = t[x:=s]
 substitute (Var x) s (Var y)
     | x==y = s -- y[x:=s]=s if x=y
     | otherwise = Var y --y[x:=s]=y if x/=y
@@ -52,7 +53,6 @@ substitute u v t = t -- needed for non-exhaustive patterns (when u is not a vari
 -- substitute (Var'z') (Func 'f' [Var 'x']) (Func 'f' [Func 'g' [Var 'x'], Func 'h' [Var 'y', Var 'z']])
 
 appsub :: Eq t => Substitution t -> Term t -> Term t
--- appsub is an abbreviation for apply substitution
 -- appsub s t = the term obtained by applying s on t
 appsub [] (Var x) = Var x
 appsub ((Var y, t) : l) (Var x)
@@ -62,12 +62,12 @@ appsub s (Func f l) = Func f [appsub s t | t <- l]
 -- NOTE: the function appsub is not total. For example
 -- appsub [(Func 'f' [Var 'x'], Var 't')] (Var 'y')
 -- is not defined. Make sure you only invoke it with well-defined substitutions.
-
+--
 -- Example
 -- appsub [(Var 'x', Var 'y'), (Var 'y', Func 'k' [Var 'p'])] (Func 'f' [Func 'g' [Var 'x'], Func 'h' [Var 'y', Var 'z']])
 
--- transition will take a problem-set P of equalities (first argument) a solution-set S (second argument) and returns a pair (P',S') of a new problem-set and solution-set.
 
+-- transition will take a problem-set P of equalities (first argument) a solution-set S (second argument) and returns a pair (P',S') of a new problem-set and solution-set.
 transition :: Eq t => ([(Term t, Term t)], Substitution t) -> ([(Term t, Term t)], Substitution t)
 transition ([], s) = ([],s)
 transition (((x@(Var _), y@(Var _)) : ls), s)
@@ -82,11 +82,6 @@ transition (((y@(Func _ _), x@(Var _)) : ls), s)
 transition (((x@(Func f xs), y@(Func g ys)) : ls), s)
     | f/=g = ([],[])
     | otherwise = (zip xs ys ++ ls, s)
-
--- transition ([(Func 'a' [], Var 'z'), (Var 'x', Func 'h' [Var 'y']), (Func 'h' [Func 'g' [Var 'z']], Func 'h' [Var 'y'])], [])
--- transition (transition ([(Func 'a' [], Var 'z'), (Var 'x', Func 'h' [Var 'y']), (Func 'h' [Func 'g' [Var 'z']], Func 'h' [Var 'y'])], []))
--- transition (transition (transition ([(Func 'a' [], Var 'z'), (Var 'x', Func 'h' [Var 'y']), (Func 'h' [Func 'g' [Var 'z']], Func 'h' [Var 'y'])], [])))
--- transition (transition (transition (transition ([(Func 'a' [], Var 'z'), (Var 'x', Func 'h' [Var 'y']), (Func 'h' [Func 'g' [Var 'z']], Func 'h' [Var 'y'])], []))))
 
 -- proceed takes a pair (P,S) where P is a problem-set and S is a Solution-set and applies a transition-step as long as possible (i.e. as long as P is non-empty)
 proceed :: Eq t => ([(Term t, Term t)], Substitution t) -> Substitution t
