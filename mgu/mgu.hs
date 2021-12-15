@@ -2,8 +2,7 @@
 import Data.List ()
 --data Term = Var Int | Funct String Int [Term]
 data Term t = Var t | Func t [Term t] deriving (Show, Eq)
--- This type-definition tries to encode term-trees
--- A term-tree is either a variable or a function applied to a list of Terms
+-- A term-tree is either a variable or a function applied to a list of Terms.
 -- Example:
 -- The term-tree corresponding to f(g(x), h(y,z)) is drawn as
 --              f
