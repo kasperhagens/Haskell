@@ -94,17 +94,14 @@ proceed (p,s)
 mgu :: Eq t => Term t -> Term t -> Substitution t
 mgu u v = reverse (proceed ([(u,v)],[]))
 
--- Examples (from syllabus automated reasoning)
---
--- Example 1
+-- Example 1 (from syllabus automated reasoning)
 -- s= Func 'P' [Func 'f' [Var 'x'], Var 'y']
 -- t= Func 'P' [Var 'z', Func 'g' [Var 'w']]
 -- mgu st
 -- =
 -- mgu (Func 'P' [Func 'f' [Var 'x'], Var 'y']) (Func 'P' [Var 'z', Func 'g' [Var 'w']])
--- =
---
--- Example 2
+
+-- Example 2 (from syllabus automated reasoning)
 -- s= Func 'P' [Func 'f' [Var 'x'], Var 'x']
 -- t = Func 'P' [Var 'y', Func 'g' [Var 'y']]
 -- mgu s t
@@ -119,7 +116,7 @@ mgu u v = reverse (proceed ([(u,v)],[]))
 -- mgu (Func 'f' [Func 'f' [Func 'g' [Var 'z'], Var 'z'], Func 'f' [Var 'x', Var 'z']]) (Func 'f'[Var 'y',Func 'f' [Func 'f' [Var 'y', Func 'g' [Var 'y']], Func 'g' [Var 'w']]])
 
 --Example 4: from https://www.cs.toronto.edu/~sheila/384/w11/Lectures/csc384w11-KR-tutorial.pdf
--- !!! THIS EXAMPLE GIVES ALSO WRONG ANSWER !!!
+-- !!! CAUTION: THE SOLUTION ON THE SLIDES IS WRONG. THE ALGORITHM WILL CALCULATE THE CORRECT MGU!!!
 -- s = Func 'p' [Func 'a' [], Var 'x', Func 'h' [Func 'g' [Var 'z']]]
 -- t= Func 'p' [Var 'z', Func 'h' [Var 'y'], Func 'h' [Var 'y']]
 -- mgu s t =
