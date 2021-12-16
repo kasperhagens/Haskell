@@ -125,10 +125,10 @@ mgu u v = reverse (proceed ([(u,v)],[]))
 
 -- proceed ([(Func 'p' [Func 'a' [], Var 'x', Func 'h' [Func 'g' [Var 'z']]], Func 'p' [Var 'z', Func 'h' [Var 'y'], Func 'h' [Var 'y']])], [])
 
-
-convTermtoStr :: Term String -> String
-convTermtoStr (Var x) = x
-convTermtoStr (Func f xs) = f++"(" ++ (concat [convTermtoStr x ++ "," | x<- xs]) ++ ")"
+-- convert takes a string and concerts it to a string. Note that (convert t) contains additional superfluous commas for any non-variable term. For example convert (Func "f" [Var "x"]) = f(x,). We write a function remsuperflcommas to remove the superfluous commas
+convert :: Term String -> String
+convert (Var x) = x
+convert (Func f xs) = f++"(" ++ (concat [convert x ++ "," | x<- xs]) ++ ")"
 
 remsuperflcommas::String ->String
 remsuperflcommas (x:y:ys)
@@ -137,10 +137,26 @@ remsuperflcommas (x:y:ys)
 remsuperflouscommas (x:xs) = x:xs
 remsuperflouscommas "" = ""
 
-convert::Term String -> String
-convert = remsuperflcommas.convTermtoStr
+convTermtoStr::Term String -> String
+convTermtoStr = remsuperflcommas.convert
+
+
+-- We write a function convStrtoTerm which converts a string to a term.
+-- Note that 'f' is a function-symbol if and only if it is followed by '('
+-- Problem: how to identify the arguments of a function-symbol
+-- convStrtoTerm :: String -> Term string
+-- convStrtoTerm (x:y:xs)
+--     | y=='(' = Func "x" [???]
+--     | otherwise error "invalid term-string"
+
 --t = Func 'f' [Func 'g' [Var 'x'], Node 'h' [Var 'y', Var 'z']]
 --main :: IO ()
 --main = do
 --   print t
 --   putStrLn "Hello"
+
+-- bracketswitch :: (String, Int) -> (String, Int)
+-- bracketswitch ("",_)=("", _)
+-- bracketswitch ((x:xs), _)
+--     | x=='(' = (xs, 0)
+--     | x==')' = (xs, 1)
