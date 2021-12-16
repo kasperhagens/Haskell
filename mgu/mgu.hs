@@ -59,9 +59,10 @@ appsub ((Var y, t) : l) (Var x)
     | x==y = t
     | otherwise = appsub l (Var x)
 appsub s (Func f l) = Func f [appsub s t | t <- l]
--- NOTE: the function appsub is not total. For example
--- appsub [(Func 'f' [Var 'x'], Var 't')] (Var 'y')
--- is not defined. Make sure you only invoke it with well-defined substitutions.
+appsub s t = error "non-valid substitution"
+-- NOTE: an error will occur in case of non-meaningful substitutions. For example
+-- appsub [(Func 'f' [Var 'x'], Var 't')] (Var 'y') yields an error, since
+-- [(Func 'f' [Var 'x'], Var 't')] does not present a meaningful substitution.
 --
 -- Example
 -- appsub [(Var 'x', Var 'y'), (Var 'y', Func 'k' [Var 'p'])] (Func 'f' [Func 'g' [Var 'x'], Func 'h' [Var 'y', Var 'z']])
