@@ -71,23 +71,23 @@ appsub s t = error "non-valid substitution"
 -- transition will take a problem-set P of equalities (first argument) a solution-set S (second argument) and returns a pair (P',S') of a new problem-set and solution-set.
 transition :: Eq t => ([(Term t, Term t)], Substitution t) -> ([(Term t, Term t)], Substitution t)
 transition ([], s) = ([],s)
-transition (((x@(Var _), y@(Var _)) : ls), s)
+transition ((x@(Var _), y@(Var _)) : ls, s)
     | x == y = (ls, s)
     | otherwise = ([(appsub [(x,y)] u, appsub [(x,y)] v) | (u,v) <- ls], (x,y):[(appsub [(x,y)] q, appsub [(x,y)] r) | (q,r) <- s])
-transition (((x@(Var _), y@(Func _ _)) : ls), s)
+transition ((x@(Var _), y@(Func _ _)) : ls, s)
     | varin x y = ([], [])
     | otherwise = ([(appsub [(x,y)] u, appsub [(x,y)] v) | (u,v) <- ls], (x,y):[(appsub [(x,y)] q, appsub [(x,y)] r) | (q,r) <- s])
-transition (((y@(Func _ _), x@(Var _)) : ls), s)
+transition ((y@(Func _ _), x@(Var _)) : ls, s)
     | varin x y = ([], [])
     | otherwise = ([(appsub [(x,y)] u, appsub [(x,y)] v) | (u,v) <- ls], (x,y):[(appsub [(x,y)] q, appsub [(x,y)] r) | (q,r) <- s])
-transition (((x@(Func f xs), y@(Func g ys)) : ls), s)
+transition ((x@(Func f xs), y@(Func g ys)) : ls, s)
     | f/=g = ([],[])
     | otherwise = (zip xs ys ++ ls, s)
 
 -- proceed takes a pair (P,S) where P is a problem-set and S is a Solution-set and applies a transition-step as long as possible (i.e. as long as P is non-empty)
 proceed :: Eq t => ([(Term t, Term t)], Substitution t) -> Substitution t
 proceed (p,s)
-    | p==[] = s
+    | null p = s
     | otherwise = proceed (transition (p, s))
 -- proceed ([(Func 'a' [], Var 'z'), (Var 'x', Func 'h' [Var 'y']), (Func 'h' [Func 'g' [Var 'z']], Func 'h' [Var 'y'])], [])
 
@@ -126,6 +126,19 @@ mgu u v = reverse (proceed ([(u,v)],[]))
 -- proceed ([(Func 'p' [Func 'a' [], Var 'x', Func 'h' [Func 'g' [Var 'z']]], Func 'p' [Var 'z', Func 'h' [Var 'y'], Func 'h' [Var 'y']])], [])
 
 
+convTermtoStr :: Term String -> String
+convTermtoStr (Var x) = x
+convTermtoStr (Func f xs) = f++"(" ++ (concat [convTermtoStr x ++ "," | x<- xs]) ++ ")"
+
+remsuperflcommas::String ->String
+remsuperflcommas (x:y:ys)
+    | x==',' && y==')' = y:remsuperflcommas ys
+    | otherwise = x:remsuperflcommas (y:ys)
+remsuperflouscommas (x:xs) = x:xs
+remsuperflouscommas "" = ""
+
+convert::Term String -> String
+convert = remsuperflcommas.convTermtoStr
 --t = Func 'f' [Func 'g' [Var 'x'], Node 'h' [Var 'y', Var 'z']]
 --main :: IO ()
 --main = do
