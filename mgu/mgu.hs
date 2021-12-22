@@ -1,5 +1,9 @@
 {-# OPTIONS_GHC -Wno-incomplete-patterns #-}
-data Term t = Var t | Func t [Term t] deriving (Show, Eq)
+data Term t= Var t | Func t [Term t] deriving (Show, Eq)
+
+instance Functor Term where
+    fmap f (Var x) = Var (f x)
+    fmap f (Func x ls) = Func (f x) [fmap f l | l<-ls]
 -- A term is either a variable or a function applied to a list of Terms.
 -- Example:
 -- f(g(x), h(y,z)) is a term. Its corresponding tree is drawn as
