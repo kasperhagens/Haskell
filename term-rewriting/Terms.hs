@@ -1,6 +1,8 @@
-{-# LANGUAGE TypeApplications #-}
-module Terms (varin, getvars, getfuncs, substitute, appsub, mgu) where
+
+module Terms (postoterm, positions, subterms, issubterm, varin, vars, funcs, substitute, appsub, mgu) where
 import qualified Data.Map as Map
+import qualified Data.List as List
+import Distribution.Simple.Utils (xargs)
 type Funcname = String
 type Varname = Int
 data Term = V Varname| F Funcname [Term] deriving (Eq)
@@ -19,6 +21,31 @@ remsuperflcommas l = case l of
     (x:xs) -> x:xs
     [] -> []
 
+type Position = [Int]
+postoterm :: Position -> Term -> Maybe Term
+postoterm [] (V x) = Just (V x)
+postoterm (y:ys) (V x) = Nothing
+postoterm [] (F f l) = Just (F f l)
+postoterm (x:xs) (F c [])= Just (F c [])
+postoterm (x:xs) (F f l)= postoterm xs (l!!x)
+
+--pos is a helper function used for defining the function positions
+pos :: Term -> [Position]
+pos (V x) = [[]]
+pos (F c []) = [[]]
+pos (F f l) = [i:p | i <- [0..length l-1], p<-pos(l!!i)]
+
+positions t = List.nub [p | v<-pos t, p <- List.inits v]
+
+--maysubterms is a helper function used to define the function subterms
+maysubterms :: Term -> [Maybe Term]
+maysubterms t = List.nub [postoterm p t | p <- positions t ]
+
+subterms :: Term -> [Term]
+subterms t = [s | Just s <- maysubterms t]
+
+issubterm :: Term -> Term -> Bool
+issubterm s t = s `elem` subterms t
 --Map a b is the type of mappings from type a to type b
 --You can make a mapping from a list with the function fromList.
 --For example, Map.fromList [((1,2),(3,4),(5,6))] creates a mapping
@@ -36,17 +63,17 @@ varin x (V y)
    | otherwise = False
 varin x (F f l) = or [varin x t | t <- l]
 
--- showvars t shows a list of variable names occuring in t. Similarly, showfuncs t shows the list of functionsymbols occuring in t.
+-- getvars t shows a list of variable names occuring in t. Similarly, showfuncs t shows the list of functionsymbols occuring in t.
 -- Example
 -- showvars(F "f" [F "g" [V 1], F "h" [V 2, V 3]]) = [1,2,3]
 -- showfuncs(F "f" [F "g" [V 1], F "h" [V 2, V 3]]) = [1,2,3]
-getvars :: Term -> [Varname]
-getvars (V x) = [x]
-getvars (F f l) = concat [getvars t | t<- l]
+vars :: Term -> [Varname]
+vars (V x) = [x]
+vars (F f l) = concat [vars t | t<- l]
 
-getfuncs :: Term -> [Funcname]
-getfuncs (V x) = []
-getfuncs (F f l) = f : concat [getfuncs t | t<- l]
+funcs :: Term -> [Funcname]
+funcs (V x) = []
+funcs (F f l) = f : concat [funcs t | t<- l]
 
 -- substitute x s t equals t[x:=s]
 -- Example
@@ -65,7 +92,7 @@ substitute x s (F f l) = F f [substitute x s t | t <- l]
 -- t = F "f" [F "g" [V 1], F "h" [V 2, V 3]]
 -- appsub s t = f(g(2),h(k(4),3))
 appsub :: Substitution -> Term -> Term
-appsub s (V x) = case (Map.lookup x s) of
+appsub s (V x) = case Map.lookup x s of
     Nothing  -> V x
     Just y -> y
 appsub s (F f l) = F f [appsub s t | t <- l]
@@ -74,7 +101,7 @@ appsub s (F f l) = F f [appsub s t | t <- l]
 type EQ = [(Term, Term)]
 transition :: (EQ, EQ) -> (EQ, EQ)
 transition ([], s) = ([],s)
-transition (((V x), V y) : ls, s)
+transition ((V x, V y) : ls, s)
     | x == y = (ls, s)
     | otherwise = ([(appsub sub u, appsub sub v) | (u,v) <- ls], (V x,V y):[(appsub sub q, appsub sub r) | (q,r) <- s])
     where sub = Map.fromList [(x,V y)]
