@@ -10,7 +10,7 @@ data Term = V Varname| F Funcname [Term] deriving (Eq)
 instance Show Term where
     show = remsuperflcommas.convtoStr
 
--- convtoStr takes a string and concerts it to a string. Note that convtoStr t contains additional superfluous commas for any non-variable term t. For example convtoStr (F "f" [V "x"]) = f(x,). We write a function remsuperflcommas to remove the superfluous commas
+-- convtoStr takes a string and concerts it to a string. Note that convtoStr t contains additional superfluous commas for any non-variable term t. For example convtoStr (F "f" [V "x"]) = f(x,). Therefore, we wrote a function remsuperflcommas to remove the superfluous commas.
 convtoStr :: Term -> String
 convtoStr (V x) = show x
 convtoStr (F f xs) = f++"(" ++ (concat [convtoStr x ++ "," | x<- xs]) ++ ")"
@@ -35,6 +35,7 @@ pos (V x) = [[]]
 pos (F c []) = [[]]
 pos (F f l) = [i:p | i <- [0..length l-1], p<-pos(l!!i)]
 
+positions :: Term -> [Position]
 positions t = List.nub [p | v<-pos t, p <- List.inits v]
 
 --maysubterms is a helper function used to define the function subterms
@@ -156,4 +157,4 @@ mgu u v = (eqtosub . proceed) ([(u,v)],[])
 -- !!! CAUTION: THE SOLUTION ON THE SLIDES IS WRONG. THE ALGORITHM WILL CALCULATE THE CORRECT MGU!!!
 -- s = F "p" [F "a" [], V 1, F "h" [F "g" [V 3]]]
 -- t = F "p" [V 3, F "h" [V 2], F "h" [V 2]]
--- mgu s t = [(1,h(g(a()))),(2,g(a())),(3,a())]
+-- mgu s t = fromList [(1,h(g(a()))),(2,g(a())),(3,a())]
