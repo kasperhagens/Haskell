@@ -1,5 +1,5 @@
 {-# LANGUAGE TypeApplications #-}
-module Terms where
+module Terms (varin, getvars, getfuncs, substitute, appsub, mgu) where
 import qualified Data.Map as Map
 type Funcname = String
 type Varname = Int
@@ -36,13 +36,17 @@ varin x (V y)
    | otherwise = False
 varin x (F f l) = or [varin x t | t <- l]
 
--- showvars t shows a list of variable names occuring in t
+-- showvars t shows a list of variable names occuring in t. Similarly, showfuncs t shows the list of functionsymbols occuring in t.
 -- Example
 -- showvars(F "f" [F "g" [V 1], F "h" [V 2, V 3]]) = [1,2,3]
-showvars :: Term -> [Varname]
-showvars (V x) = [x]
-showvars (F f l) = concat [showvars t | t<- l]
+-- showfuncs(F "f" [F "g" [V 1], F "h" [V 2, V 3]]) = [1,2,3]
+getvars :: Term -> [Varname]
+getvars (V x) = [x]
+getvars (F f l) = concat [getvars t | t<- l]
 
+getfuncs :: Term -> [Funcname]
+getfuncs (V x) = []
+getfuncs (F f l) = f : concat [getfuncs t | t<- l]
 
 -- substitute x s t equals t[x:=s]
 -- Example
@@ -104,11 +108,25 @@ eqtosub x = Map.fromList [processpair (a,b) | (a,b) <- x]
 
 --mgu u v calculates the most general unifier of u and v
 mgu :: Term -> Term -> Substitution
-mgu u v = (eqtosub . reverse . proceed) ([(u,v)],[])
+mgu u v = (eqtosub . proceed) ([(u,v)],[])
 
 -- Example 1 (from syllabus automated reasoning)
--- s= F "P" [F "f" [V 1], V 2]
--- t= F "P" [V 3, F "g" [V 4]]
--- mgu st
--- =
---
+-- s = F "P" [F "f" [V 1], V 2]
+-- t = F "P" [V 3, F "g" [V 4]]
+-- mgu st = fromList [(2,g(4)),(3,f(1))]
+
+-- Example 2 (from syllabus automated reasoning)
+-- s = F "P" [F "f" [V 1], V 1]
+-- t = F "P" [V 2, F "g" [V 2]]
+-- mgu s t = fromList []
+
+-- Example 3: Problem 4 of the Exam Automated Reasoning 2016
+-- s = F "f" [F "f" [F "g" [V 3], V 3], F "f" [V 1, V 3]]
+-- t = F "f" [V 2, F "f" [F "f" [V 2, F "g" [V 2]], F "g" [V 4]]]
+-- mgu s t = fromList [(1,f(f(g(g(4)),g(4)),g(f(g(g(4)),g(4))))),(2,f(g(g(4)),g(4))),(3,g(4))]
+
+--Example 4: from https://www.cs.toronto.edu/~sheila/384/w11/Lectures/csc384w11-KR-tutorial.pdf
+-- !!! CAUTION: THE SOLUTION ON THE SLIDES IS WRONG. THE ALGORITHM WILL CALCULATE THE CORRECT MGU!!!
+-- s = F "p" [F "a" [], V 1, F "h" [F "g" [V 3]]]
+-- t = F "p" [V 3, F "h" [V 2], F "h" [V 2]]
+-- mgu s t = [(1,h(g(a()))),(2,g(a())),(3,a())]
