@@ -46,7 +46,7 @@ subterms :: Term -> [Term]
 subterms t = [s | Just s <- maysubterms t]
 
 issubterm :: Term -> Term -> Bool
-issubterm s t = s `elem` subterms t
+issubterm s t = s `elem` (subterms t)
 --Map a b is the type of mappings from type a to type b
 --You can make a mapping from a list with the function fromList.
 --For example, Map.fromList [((1,2),(3,4),(5,6))] creates a mapping
@@ -129,7 +129,7 @@ processpair (V x, V y) = (x, V y)
 processpair (V x, y@(F _ _)) = (x, y)
 processpair (x, y) = (-1, V (-1)) -- set some default value when applied to nonsense
 
--- eqtosub takes an equation and turns it into a substitution, for example
+-- eqtosub takes an equation and turns it into a substitution. It only makes sense in case the equation really represents a substitution but for our application this will always be true (we don't export this function anyway). For example
 -- eqtosub [(V 1, V 2), (V 3, F "f" [V 2])] = [(1,2),(3,f(2))]
 eqtosub :: EQ -> Substitution
 eqtosub x = Map.fromList [processpair (a,b) | (a,b) <- x]
