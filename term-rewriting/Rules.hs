@@ -1,11 +1,14 @@
 module Rules where
 import qualified Data.Map as Map
 import Terms ( Term(..), Varname )
-data Basicformula = Eq Term Term | Lt Term Term | Le Term Term deriving Eq
+data Basicformula = TT | FF | Eq Term Term | Lt Term Term | Le Term Term deriving Eq
 instance Show Basicformula where
     show (Eq s t) = (show s) ++ "=" ++ (show t)
     show (Lt s t) = (show s) ++ "<" ++ (show t)
     show (Le s t) = (show s) ++ "<="++ (show t)
+    show TT = "True"
+    show FF = "False"
+
 data Constraint = B Basicformula | Or Constraint Constraint | And Constraint Constraint deriving Eq
 instance Show Constraint where
     show (B s) = show s
@@ -21,7 +24,11 @@ data Rule = R Term Term Constraint deriving Eq
 leftside :: Rule -> Term
 leftside (R s t c) = s
 
--- If we have two terms s = f(x1,...,xn) and t = g(y1,...,ym) then inst r1 r2 will give the substitution such that
+-- If we have two rules
+-- r1 = f(x1,...,xn) -> f'(a1,...,am)
+-- and
+-- r2 = g(y1,...,yi) -> g(b1,...,bj)
+-- then inst r1 r2 will give the 'substitution' such that
 inst :: Term -> Term -> [(Varname, Term)]
 inst s t = case s of
     (V x) -> case t of
@@ -30,4 +37,3 @@ inst s t = case s of
     (F f l) -> case t of
         (V y) ->[]
         (F g m) -> if (f/=g || length(l)/=length(m)) then [] else (concat [ inst a b | (a,b) <- (zip l m)])
-
