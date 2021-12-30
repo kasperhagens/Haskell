@@ -1,7 +1,8 @@
+
 module Equations where
 import qualified Data.Map as Map
-import Terms (Term(..), Varname, Substitution )
-import Rules (Basicformula(..), Constraint(..), Rule (..), leftsideR)
+import Terms (Term(..), Varname, Substitution, appsub)
+import Rules (Basicformula(..), Constraint(..), Rule (..), leftsideR, appsubC, appsubR)
 
 --Example of equation
 --E (F "f" [V 1]) (F "g" [V 2]) (B (V 1 `Le` V 2))
@@ -41,3 +42,6 @@ equalize t1 t2 = case t1 of
 
 getinstance :: Rule -> Equation -> Substitution
 getinstance r e = Map.fromList (equalize (leftsideR r) (leftsideEQ e))
+
+appsubE :: Substitution -> Equation -> Equation
+appsubE s (E t1 t2 c) =  E (appsub s t1) (appsub s t2) (appsubC s c)
