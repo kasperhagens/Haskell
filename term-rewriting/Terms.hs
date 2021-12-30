@@ -33,8 +33,13 @@ postoterm (x:xs) (F f ts)= postoterm xs (ts!!x)
 pos :: Term -> [Position]
 pos (V x) = [[]]
 pos (F c []) = [[]]
-pos (F f ts) = [i:p | i <- [0..length ts-1], p<-pos(ts!!i)]
+pos (F f ts) = [i:p | i <- [0..length ts-1], p <- pos(ts!!i)]
 
+-- positions t = [positions of all subterms in t]
+-- Example
+-- positions (F "f" [F "g" [V 1], F "h" [V 2, V 3]])
+-- =
+-- [[],[0],[0,0],[1],[1,0],[1,1]]
 positions :: Term -> [Position]
 positions t = List.nub [p | x <- pos t, p <- List.inits x]
 
