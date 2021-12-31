@@ -31,6 +31,13 @@ reverseEQ (E t1 t2 c) = E t2 t1 c
 -- e = E (F "f" [V 4, V 5]) (F "g" [V 5]) (B (V 4 `Eq` V 5))
 -- then
 -- getinstance r e = Map.fromList [(1, v4), (1, v5)] = fromList [(1,v5)]
+--
+--
+-- Example
+-- r : u(v1,v2,v3) -> v1 + u(v4,v5,v6) [v5<=v1 /\ v1=v4+1 /\ v2=v5+1 /\ v3=v6+v5]
+-- e : u(v1,v7,v8) ≈  v1 + u(v4,v2,v3) [v5<=v1 /\ v1=v4+1 /\ v2=v5+1 /\ v3=v6+v5 /\ v2<=v1 /\ v7=v2+1 /\ v8=v3+v2]
+--
+-- r =
 equalize :: Term -> Term -> [(Varname, Term)]
 equalize t1 t2 = case t1 of
     (V x) -> case t2 of
