@@ -1,19 +1,30 @@
 module Rules where
 import qualified Data.Map as Map
 import Terms ( Term(..), Varname, Substitution, appsub)
-data Basicformula = TT | FF | Eq Term Term | Lt Term Term | Le Term Term deriving Eq
+data Basicformula =   TT
+                    | FF
+                    | Eq Term Term
+                    | Lt Term Term
+                    | Le Term Term
+                    | Gt Term Term
+                    | Ge Term Term
+                    deriving Eq
 instance Show Basicformula where
+    show TT = "True"
+    show FF = "False"
     show (Eq t1 t2) = (show t1) ++ "=" ++ (show t2)
     show (Lt t1 t2) = (show t1) ++ "<" ++ (show t2)
     show (Le t1 t2) = (show t1) ++ "<="++ (show t2)
-    show TT = "True"
-    show FF = "False"
+    show (Gt t1 t2) = (show t1) ++ ">" ++ (show t2)
+    show (Ge t1 t2) = (show t1) ++ ">=" ++ (show t2)
 appsubB :: Substitution -> Basicformula -> Basicformula
 appsubB s (TT) = TT
 appsubB s (FF) = FF
 appsubB s (Eq t1 t2) = Eq (appsub s t1) (appsub s t2)
 appsubB s (Lt t1 t2) = Lt (appsub s t1) (appsub s t2)
 appsubB s (Le t1 t2) = Le (appsub s t1) (appsub s t2)
+appsubB s (Gt t1 t2) = Gt (appsub s t1) (appsub s t2)
+appsubB s (Ge t1 t2) = Ge (appsub s t1) (appsub s t2)
 
 --Example: the constraint v1<=3 /\ v2=f(v1) is written as
 --B ((V 1) `Le` (F "3" [])) `And` B((V 2) `Eq` (F "f" [V 1]))
