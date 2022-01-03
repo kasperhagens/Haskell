@@ -136,7 +136,7 @@ transition ((x@(F f xs), y@(F g ys)) : ls, s)
     | f/=g = ([],[])
     | otherwise = (zip xs ys ++ ls, s)
 
--- proceed takes a pair (P,S) where P is a problem-set and S is a Solution-set and applies a transition-step as long as possible (i.e. as long as P is non-empty)
+-- proceed takes a pair (P,S) where P is a problem-set and S is a Solution-set and applies a transition-step as long as possible (i.e. as long as P is non-empty).
 proceed :: (EQ, EQ) -> EQ
 proceed (e1, e2)
     | null e1 = e2

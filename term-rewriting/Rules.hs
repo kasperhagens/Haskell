@@ -30,17 +30,23 @@ appsubB s (Ge t1 t2) = Ge (appsub s t1) (appsub s t2)
 --B ((V 1) `Le` (F "3" [])) `And` B((V 2) `Eq` (F "f" [V 1]))
 --Example: the constraint v1<=3 /\ (v2=f(v1) \/ v2=f(f(v1)) is written as
 -- B ((V 1) `Le` (F "3" [])) `And` (B((V 2) `Eq` (F "f" [V 1])) `Or` B((V 2) `Eq` (F "f"[F "f" [V 1]])))
-data Constraint = B Basicformula | Or Constraint Constraint | And Constraint Constraint deriving Eq
+data Constraint = B Basicformula
+                | Or Constraint Constraint
+                | And Constraint Constraint
+                | N Constraint
+                deriving Eq
 instance Show Constraint where
     show (B f) = show f
     show (Or f1 f2) = "(" ++ (show f1) ++ ")" ++ " or " ++ "(" ++ (show f2) ++ ")"
-    --Note that the brackets around s and t are really necessary for visualizing expressions like s \/ (t /\ u)
+    --The brackets around s and t are really necessary for expressions like s \/ (t /\ u)
     show (And f1 f2) = "("++(show f1) ++ ")"++ " and "++ "("++(show f2) ++")"
+    show (N f) = "not("++(show f)++")"
 
 appsubC :: Substitution -> Constraint -> Constraint
 appsubC s (B f) = B (appsubB s f)
 appsubC s (Or c1 c2) = Or (appsubC s c1) (appsubC s c2)
 appsubC s (And c1 c2) = And (appsubC s c1) (appsubC s c2)
+appsubC s (N c) = N (appsubC s c)
 
 -- Example: the rule f(v1) -> g(v2) [v1 <= v2] is written as
 -- R (F "f" [V 1]) (F "g" [V 2]) (B (V 1 `Le` V 2))
