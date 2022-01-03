@@ -10,8 +10,9 @@ import Terms (Term(..), Varname, Substitution, appsub)
 import Rules (Basicformula(..), Constraint(..), Rule (..), leftsideR, rightsideR, appsubC, appsubR)
 import Equations
 type Hypothesis = [Rule]
--- Example (example from the seminar-document)
--- sum1 = [R (F "sum1" [V 1]) (F "0" []) (B (V 1 `Le` F "0" [])), ]
+-- Example (from the seminar-document)
+-- sum1 = [R (F "sum1" [V 1]) (F "0" []) (B (V 1 `Le` F "0" [])), R (F "sum1" [V 1]) (F "+" [V 1, F "sum1" [F "-" [V 1, F "1" []]]]) (B (V 1 `Ge` F "0" []))]
+--
 -- sum2 = []
 type Rules = [Rule]
 type Equations = [Equation]
