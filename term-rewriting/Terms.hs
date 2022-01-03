@@ -7,13 +7,12 @@ type Funcname = String
 type Varname = Int
 data Term = V Varname| F Funcname [Term] deriving (Eq)
 
-instance Show Term where
-    show = remsuperflcommas.convtoStr
-
 -- convtoStr takes a string and concerts it to a string. Note that convtoStr t contains additional superfluous commas for any non-variable term t. For example convtoStr (F "f" [V "V 1"]) = f(v1,). Therefore, we wrote a function remsuperflcommas to remove the superfluous commas.
 convtoStr :: Term -> String
 convtoStr (V x) = "v"++(show x)
 convtoStr (F "+" [t1, t2]) = (convtoStr t1) ++ "+" ++ (convtoStr t2)
+convtoStr (F "-" [t1, t2]) = (convtoStr t1) ++ "-" ++ (convtoStr t2)
+convtoStr (F "*" [t1, t2]) = (convtoStr t1) ++ "*" ++ (convtoStr t2)
 convtoStr (F f ts) = f ++ "(" ++ (concat [convtoStr t ++ "," | t <- ts]) ++ ")"
 
 remsuperflcommas::String ->String
@@ -22,7 +21,11 @@ remsuperflcommas l = case l of
     (x:xs) -> x:xs
     [] -> []
 
+instance Show Term where
+    show = remsuperflcommas.convtoStr
+
 type Position = [Int]
+-- postoterm takes a position p and a term t and returns maybe the subterm of t occuring on position p (depending on whether p represents a valid position in t).
 postoterm :: Position -> Term -> Maybe Term
 postoterm [] (V x) = Just (V x)
 postoterm (y:ys) (V x) = Nothing
