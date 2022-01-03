@@ -1,0 +1,3 @@
+-- In this module we model the deduction system for constrainted program equations as described in the following paper
+-- Verifying Procedural Programs via Constrained Rewriting Induction - Carsten Fuhs, Cynthia Kop, Naoki Nishida, page A:16 - A:20.
+-- source: https://arxiv.org/abs/1409.0166

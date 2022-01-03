@@ -1,4 +1,4 @@
--- In this module we model the programm equations as described in the following paper
+-- In this module we model the constrainted programm equations as described in the following paper
 -- Verifying Procedural Programs via Constrained Rewriting Induction - Carsten Fuhs, Cynthia Kop, Naoki Nishida, page A:15, section 4.2, definition 4.3
 -- source: https://arxiv.org/abs/1409.0166
 module Equations where
