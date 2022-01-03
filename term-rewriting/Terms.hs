@@ -13,7 +13,8 @@ instance Show Term where
 -- convtoStr takes a string and concerts it to a string. Note that convtoStr t contains additional superfluous commas for any non-variable term t. For example convtoStr (F "f" [V "V 1"]) = f(v1,). Therefore, we wrote a function remsuperflcommas to remove the superfluous commas.
 convtoStr :: Term -> String
 convtoStr (V x) = "v"++(show x)
-convtoStr (F f ts) = f++"(" ++ (concat [convtoStr t ++ "," | t <- ts]) ++ ")"
+convtoStr (F "+" [t1, t2]) = (convtoStr t1) ++ "+" ++ (convtoStr t2)
+convtoStr (F f ts) = f ++ "(" ++ (concat [convtoStr t ++ "," | t <- ts]) ++ ")"
 
 remsuperflcommas::String ->String
 remsuperflcommas l = case l of

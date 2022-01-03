@@ -42,3 +42,6 @@ appsubR s (R t1 t2 c) = R (appsub s t1) (appsub s t2) (appsubC s c)
 
 leftsideR :: Rule -> Term
 leftsideR (R t1 t2 c) = t1
+
+rightsideR :: Rule -> Term
+rightsideR (R t1 t2 c) = t2
