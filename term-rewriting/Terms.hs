@@ -33,13 +33,14 @@ postoterm [] (F f ts) = Just (F f ts)
 postoterm (x:xs) (F c [])= Just (F c [])
 postoterm (x:xs) (F f ts)= postoterm xs (ts!!x)
 
--- pos is a helper function used for defining the function positions
+-- pos is a helper function used for defining positions
 pos :: Term -> [Position]
 pos (V x) = [[]]
 pos (F c []) = [[]]
 pos (F f ts) = [i:p | i <- [0..length ts-1], p <- pos(ts!!i)]
 
 -- positions t = [positions of all subterms in t]
+--
 -- Example
 -- positions (F "f" [F "g" [V 1], F "h" [V 2, V 3]])
 -- =
@@ -55,7 +56,7 @@ maysubterms t = List.nub [postoterm p t | p <- positions t ]
 subterms :: Term -> [Term]
 subterms t = [s | Just s <- maysubterms t]
 
--- issubterm t1 t2 is True <=> t1 is a subterm of t2
+-- issubterm t1 t2 equals True <=> t1 is a subterm of t2
 issubterm :: Term -> Term -> Bool
 issubterm t1 t2 = t1 `elem` (subterms t2)
 --Map a b is the type of mappings from type a to type b
@@ -67,6 +68,7 @@ issubterm t1 t2 = t1 `elem` (subterms t2)
 type Substitution = Map.Map Varname Term
 
 -- varin x t checks whether variablename x occurs in term t
+--
 -- Example
 -- varin 1 (F "f" [F "g" [V 1], F "h" [V 2, V 3]]) = True
 varin :: Varname -> Term -> Bool
@@ -76,7 +78,8 @@ varin x (V y)
 varin x (F f ts) = or [varin x t | t <- ts]
 
 -- vars t = [variable names occuring in t]
--- showfuncs t = [functionsymbols occuring in t]
+-- funcs t = [functionsymbols occuring in t]
+--
 -- Example
 -- vars(F "f" [F "g" [V 1], F "h" [V 2, V 3]]) = [1,2,3]
 -- funcs(F "f" [F "g" [V 1], F "h" [V 2, V 3]]) = [1,2,3]
@@ -110,8 +113,11 @@ appsub s (V x) = case Map.lookup x s of
     Just y -> y
 appsub s (F f ts) = F f [appsub s t | t <- ts]
 
---transition takes a pair (P,S) where P is a problem-set of equalities, 'solution-set' S (S is a substitution) and returns a pair (P',S') of a new problem-set and solution-set.
+
+-- We now define a type EQ and a bunch of functions, all used to eventually obtain the unification algorithm mgu which calculates the most general unifier of two terms.
+
 type EQ = [(Term, Term)]
+--transition takes a pair (P,S) where P is a problem-set of equalities, solution-set S and returns a pair (P',S') of a new problem-set and solution-set. It describes how a single transition step in the mgu-algorithm is done.
 transition :: (EQ, EQ) -> (EQ, EQ)
 transition ([], s) = ([],s)
 transition ((V x, V y) : ls, s)
@@ -136,13 +142,15 @@ proceed (e1, e2)
     | null e1 = e2
     | otherwise = proceed (transition (e1, e2))
 
+-- processpair is a helper function used in the definition of eqtosub
 processpair :: (Term, Term) -> (Varname, Term)
 processpair (V x, V y) = (x, V y)
 processpair (V x, y@(F _ _)) = (x, y)
 processpair (x, y) = (-1, V (-1)) -- set some default value when applied to nonsense
-
--- eqtosub takes an equation and turns it into a substitution. It only makes sense in case the equation really represents a substitution but for our application this will always be true (we don't export this function anyway). For example
--- eqtosub [(V 1, V 2), (V 3, F "f" [V 2])] = [(1,2),(3,f(2))]
+-- eqtosub takes an equation and turns it into a substitution. It only makes sense in case the equation really represents a substitution but in our application this will always be true.
+--
+-- Example
+-- eqtosub [(V 1, V 2), (V 3, F "f" [V 2])] = fromList [(1,2),(3,f(2))]
 eqtosub :: EQ -> Substitution
 eqtosub e = Map.fromList [processpair (a,b) | (a,b) <- e]
 
