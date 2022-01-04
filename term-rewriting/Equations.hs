@@ -22,7 +22,7 @@ reverseEQ :: Equation -> Equation
 reverseEQ (E t1 t2 c) = E t2 t1 c
 
 -- If we have an equation
--- e: f(x1,...,xn) ≈ f'(a1,...,am) [C1]
+-- e: f(x1,...,xn) ≈  f'(a1,...,am)  [C1]
 -- and a rule
 -- r: g(y1,...,yi) -> g'(b1,...,bj)  [C2]
 -- then getinstanceleft r e may give the substitution tau such that
@@ -30,7 +30,7 @@ reverseEQ (E t1 t2 c) = E t2 t1 c
 --
 -- Example 1
 -- r : f(v1,v1) -> g(v1)  [true]
--- e : f(v4,v5) ≈ g(v4)  [v4=v5]
+-- e : f(v4,v5) ≈  g(v4)  [v4=v5]
 --
 -- r = R (F "f" [V 1, V 1]) (F "g" [V 1]) (B TT)
 -- e = E (F "f" [V 4, V 5]) (F "g" [V 5]) (B (V 4 `Eq` V 5))
