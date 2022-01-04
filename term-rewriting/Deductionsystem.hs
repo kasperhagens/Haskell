@@ -11,7 +11,7 @@ import Rules (Basicformula(..), Constraint(..), Rule (..), leftsideR, rightsideR
 import Equations
 type Hypothesis = [Rule]
 -- Example (from the seminar-document)
--- sum1 = [R (F "sum1" [V 1]) (F "0" []) (B (V 1 `Le` F "0" [])), R (F "sum1" [V 1]) (F "+" [V 1, F "sum1" [F "-" [V 1, F "1" []]]]) (B (V 1 `Ge` F "0" []))]
+-- sum1 = [R (F "sum1" [V 1]) (F "0" []) (B (V 1 `Le` F "0" [])), R (F "sum1" [V 1]) (F "+" [V 1, F "sum1" [F "-" [V 1, F "1" []]]]) (B (V 1 `Ge` F "0" [])), R (F "+" [V 1, F "return" [V 2]]) (F "return"[F "+" [V 1, V 2]]) (B TT)]
 --
 -- sum2 = []
 type Rules = [Rule]
