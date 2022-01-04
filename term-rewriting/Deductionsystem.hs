@@ -63,3 +63,6 @@ getinstanceleft r e = Map.fromList (equalize (leftsideR r) (leftsideEQ e))
 
 getinstanceleftright :: Rule -> Equation -> Substitution
 getinstanceleftright r e = Map.fromList ((equalize (leftsideR r) (leftsideEQ e)) ++ (equalize (rightsideR r) (rightsideEQ e)))
+
+-- If r is a rule then
+-- getinstancesleft r e = [(getinstanceleft r t, t) | t is a subterm of the left-hand side of e such that getinstanceleft r t is not the empty substitution]. Note that the t's occurring here are availble for applying rule r.
