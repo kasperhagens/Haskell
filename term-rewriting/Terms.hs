@@ -13,6 +13,7 @@ convtoStr (V x) = "v"++(show x)
 convtoStr (F "+" [t1, t2]) = (convtoStr t1) ++ "+" ++ (convtoStr t2)
 convtoStr (F "-" [t1, t2]) = (convtoStr t1) ++ "-" ++ (convtoStr t2)
 convtoStr (F "*" [t1, t2]) = (convtoStr t1) ++ "*" ++ (convtoStr t2)
+convtoStr (F f []) = f
 convtoStr (F f ts) = f ++ "(" ++ (concat [convtoStr t ++ "," | t <- ts]) ++ ")"
 
 remsuperflcommas::String ->String

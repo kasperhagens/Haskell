@@ -13,7 +13,7 @@ type Hypothesis = [Rule]
 -- Example (from the seminar-document)
 -- sum1 = [R (F "sum1" [V 1]) (F "0" []) (B (V 1 `Le` F "0" [])), R (F "sum1" [V 1]) (F "+" [V 1, F "sum1" [F "-" [V 1, F "1" []]]]) (B (V 1 `Ge` F "0" [])), R (F "+" [V 1, F "return" [V 2]]) (F "return"[F "+" [V 1, V 2]]) (B TT)]
 --
--- sum2 = []
+-- sum2 = [R (F "sum2"[V 1]) (F "u" [V 1, F "0" [], F "0" []]) (B TT)]
 type Rules = [Rule]
 type Equations = [Equation]
 type Proofstate = (Equations, Rules)
