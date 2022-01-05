@@ -33,8 +33,8 @@ equalize t1 t2 = case t1 of
 -- e: f(x1,...,xn) ≈  f'(a1,...,am)  [Ce]
 -- and a rule
 -- r: g(y1,...,yi) -> g'(b1,...,bj)  [Cr]
--- then getinstanceleft r e may give the substitution tau such that
--- g(y1,...,yi)*tau ~ f(x1,...,xn), if such a tau (possibly) exists. If such a tau does not exist then getinstance r e = [].
+-- then getinstanceleft r e may (possibily) give the substitution tau such that
+-- g(y1,...,yi)*tau ~ f(x1,...,xn), if such a tau may exists. If such a tau does not exist then getinstance r e = [].
 --
 -- Example 1
 -- r : f(v1,v1) -> g(v1)  [true]
@@ -43,7 +43,13 @@ equalize t1 t2 = case t1 of
 -- r = R (F "f" [V 1, V 1]) (F "g" [V 1]) (B TT)
 -- e = E (F "f" [V 4, V 5]) (F "g" [V 5]) (B (V 4 `Eq` V 5))
 -- then
--- getinstanceleft r e = Map.fromList [(1, v4), (1, v5)] = fromList [(1,v5)]
+-- s = getinstanceleft r e
+-- = Map.fromList [(1, v4), (1, v5)] = fromList [(1,v5)]
+--
+-- REMARK
+-- The lefthand side of r*s equals f(v5,v5), which (as a term) is not equal to f(v4,v5).
+-- However, the equality of these terms follows from the constraint.
+-- We denote f(v5,v5)~f(v4,v5).
 --
 -- In getinstanceleftriht we also equalize the right-hand sides of the rule with the equation.
 -- Example 2
