@@ -20,9 +20,9 @@ equalize t1 t2 = case t1 of
         (F g qs) -> if (f/=g || length(ts)/=length(qs)) then [] else (concat [ equalize a b | (a,b) <- (zip ts qs)])
 
 -- If we have an equation
--- e: f(x1,...,xn) ≈  f'(a1,...,am)  [C1]
+-- e: f(x1,...,xn) ≈  f'(a1,...,am)  [Ce]
 -- and a rule
--- r: g(y1,...,yi) -> g'(b1,...,bj)  [C2]
+-- r: g(y1,...,yi) -> g'(b1,...,bj)  [Cr]
 -- then getinstanceleft r e may give the substitution tau such that
 -- g(y1,...,yi)*tau ~ f(x1,...,xn), if such a tau (possibly) exists. If such a tau does not exist then getinstance r e = [].
 --
@@ -66,11 +66,36 @@ getinstanceleftright r e = Map.fromList ((equalize (leftsideR r) (leftsideEQ e))
 getinstancesleft :: Rule -> Equation -> [(Substitution,Term)]
 getinstancesleft r e = [(Map.fromList (equalize (leftsideR r) t), t) | t <- subterms (leftsideEQ e), equalize (leftsideR r) t /= []]
 
--- Example (from the seminar-document, page 102, slide 30)
--- sum1 = [R (F "sum1" [V 1]) (F "0" []) (B (V 1 `Le` F "0" [])), R (F "sum1" [V 1]) (F "+" [V 1, F "sum1" [F "-" [V 1, F "1" []]]]) (B (V 1 `Ge` F "0" [])), R (F "+" [V 1, F "return" [V 2]]) (F "return"[F "+" [V 1, V 2]]) (B TT)]
---
--- sum2 = [R (F "sum2"[V 1]) (F "u" [V 1, F "0" [], F "0" []]) (B TT), R (F "u" [V 1, V 2, V 3]) (F "u" [V 1, F "+" [V 2, F "1" [] ], F "+" [V 3, V 2]]) (B (V 2 `Le` V 1)), R (F "u" [V 1, V 2, V 3]) (F "return" [V 3]) (N (B (V 2 `Le` V 1))) ]
 type Rules = [Rule]
 type Hypothesis = [Rule]
 type Equations = [Equation]
-type Proofstate = (Equations, Rules)
+-- A proofstate as a tuple (E,H) where E is a set of equations and H is a set of induction hypothesis.
+type Proofstate = (Equations, Hypothesis)
+
+-- Example (from the seminar-document, page 102, slide 30)
+-- sum1(x) -> return(0)             [x<=0]
+-- sum1(x) -> x + sum(x-1))         [x>=0]
+-- x + return(y) -> return (x+y)    [True]
+--
+-- sum2(x) -> u(x,0,0)              [True]
+-- u(x,i,z) -> u(x,i+1,z+i)         [i<=x]
+-- u(x,i,z) -> return(z)            [not (i<=x)]
+--
+-- sum1 = [R (F "sum1" [V 1]) (F "return" [F "0" []]) (B (V 1 `Le` F "0" [])), R (F "sum1" [V 1]) (F "+" [V 1, F "sum1" [F "-" [V 1, F "1" []]]]) (B (V 1 `Ge` F "0" [])), R (F "+" [V 1, F "return" [V 2]]) (F "return"[F "+" [V 1, V 2]]) (B TT)]
+--
+-- sum2 = [R (F "sum2"[V 1]) (F "u" [V 1, F "0" [], F "0" []]) (B TT), R (F "u" [V 1, V 2, V 3]) (F "u" [V 1, F "+" [V 2, F "1" [] ], F "+" [V 3, V 2]]) (B (V 2 `Le` V 1)), R (F "u" [V 1, V 2, V 3]) (F "return" [V 3]) (N (B (V 2 `Le` V 1))) ]
+
+-- !!CAUTION!! Suppose we want to apply SIMPLIFICATION on an equation
+-- e : f(x1,...,xn) ≈  f'(a1,...,am)  [Ce]
+-- with a rule
+-- r : g(y1,...,yi) -> g'(b1,...,bj)  [Cr]
+-- and suppose that we have some substitution tau such that
+-- g(y1,...,yi)*tau ~ f(x1,...,xn)
+-- Then before we can really do the SIMPLIFICATION we have to make sure that
+-- Ce -> Cr*tau holds for all assignments of the variables x1,..., xn, a1, ..., am
+-- We need to check this with a SAT-solver
+-- For the moment we are ignoring this condition (since it requires the connection between haskell and a SAT-solver) but eventually we have to fix this.
+
+-- showsimpwithrule r es = [e in es such that we can (possibly) do SIMPLIFICATION with r on e]
+showsimpwithrule :: Rule -> Equations -> Equations
+showsimpwithrule r es = [e | e <- es, getinstancesleft r e /= []]
