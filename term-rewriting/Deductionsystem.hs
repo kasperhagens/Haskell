@@ -118,7 +118,7 @@ type Proofstate = (Equations, Hypothesis)
 -- showsimp rs es = [(e,r) | e <- es, r <- rs, such that we can (possibly) do SIMPLIFICATION with r on e]
 -- Example
 -- eqs = [E (F "sum1" [V 1]) (F "sum2" [V 1]) (B TT), E (F "sum1" [V 1]) (F "sum3" [V 1]) (B TT)]
--- rs = [R (F "sum1" [V 1]) (F "return" [F "0" []]) (B (V 1 `Le` F "0" [])), R (F "sum2"[V 1]) (F "u" [V 1, F "0" [], F "0" []]) (B TT)]
+-- rs = [R (F "sum1" [V 2]) (F "return" [F "0" []]) (B (V 2 `Le` F "0" [])), R (F "sum2"[V 2]) (F "u" [V 2, F "0" [], F "0" []]) (B TT)]
 -- showsimp rs eqs =
 showsimp :: Rules -> Equations -> [(Equation, Rule)]
 showsimp rs es = List.nub [(e,r) | e <- es, r <- rs, getinstancesleft r e /= [] || getinstancesleft r (reverseEQ e) /= []]
