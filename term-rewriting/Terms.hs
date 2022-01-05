@@ -49,7 +49,8 @@ pos (F f ts) = [i:p | i <- [0..length ts-1], p <- pos(ts!!i)]
 positions :: Term -> [Position]
 positions t = List.nub [p | x <- pos t, p <- List.inits x]
 
---maysubterms is a helper function used to define the function subterms
+-- maysubterms is a helper function used to define the function subterms
+-- The function nub from Data.List removes duplicates elements from a list
 maysubterms :: Term -> [Maybe Term]
 maysubterms t = List.nub [postoterm p t | p <- positions t ]
 

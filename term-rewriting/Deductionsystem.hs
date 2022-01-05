@@ -9,6 +9,7 @@ import qualified Data.Map as Map
 import Terms (Term(..), Varname, Substitution, appsub, subterms, mgu)
 import Rules (Basicformula(..), Constraint(..), Rule (..), leftsideR, rightsideR, appsubC, appsubR)
 import Equations
+import qualified Data.List as List
 -- equalize is a helper function used to define getinstanceleft and getinstanceleftright
 -- Example
 -- t1 = F "f" [V 1, F "f" [V 2]]
@@ -34,7 +35,9 @@ equalize t1 t2 = case t1 of
 -- and a rule
 -- r: g(y1,...,yi) -> g'(b1,...,bj)  [Cr]
 -- then getinstanceleft r e may (possibily) give the substitution tau such that
--- g(y1,...,yi)*tau ~ f(x1,...,xn), if such a tau may exists. If such a tau does not exist then getinstance r e = []. See Example 1 for the meaning of ~.
+-- g(y1,...,yi)*tau ~ f(x1,...,xn).
+-- Note that we do not consider the righthand side of the equation e (we have to do that separately).
+-- If such a tau does not exist then getinstance r e = []. See Example 1 for the meaning of ~.
 --
 -- Example 1
 -- r : f(v1,v1) -> g(v1)  [true]
@@ -112,7 +115,10 @@ type Proofstate = (Equations, Hypothesis)
 -- We need to check this with a SAT-solver
 -- For the moment we are ignoring this condition (since it requires the connection between haskell and a SAT-solver) but eventually we have to fix this.
 
--- showsimpwithrule r es = [e in es such that we can (possibly) do SIMPLIFICATION with r on e]
+-- showsimp rs es = [(e,r) | e <- es, r <- rs, such that we can (possibly) do SIMPLIFICATION with r on e]
 -- Example
-showsimpwithrule :: Rule -> Equations -> Equations
-showsimpwithrule r es = [e | e <- es, getinstancesleft r e /= []]
+-- eqs = [E (F "sum1" [V 1]) (F "sum2" [V 1]) (B TT), E (F "sum1" [V 1]) (F "sum3" [V 1]) (B TT)]
+-- rs = [R (F "sum1" [V 1]) (F "return" [F "0" []]) (B (V 1 `Le` F "0" [])), R (F "sum2"[V 1]) (F "u" [V 1, F "0" [], F "0" []]) (B TT)]
+-- showsimp rs eqs =
+showsimp :: Rules -> Equations -> [(Equation, Rule)]
+showsimp rs es = List.nub [(e,r) | e <- es, r <- rs, getinstancesleft r e /= [] || getinstancesleft r (reverseEQ e) /= []]

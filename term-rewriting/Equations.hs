@@ -8,7 +8,7 @@ import Rules (Basicformula(..), Constraint(..), Rule (..), leftsideR, rightsideR
 
 --Example of equation
 --E (F "f" [V 1]) (F "g" [V 2]) (B (V 1 `Le` V 2))
-data Equation = E Term Term Constraint
+data Equation = E Term Term Constraint deriving Eq
 instance Show Equation where
     show (E t1 t2 c) = (show t1) ++ "~" ++ (show t2) ++ " [" ++ (show c)++"]"
 
