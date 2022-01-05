@@ -10,6 +10,9 @@ import Terms (Term(..), Varname, Substitution, appsub, subterms)
 import Rules (Basicformula(..), Constraint(..), Rule (..), leftsideR, rightsideR, appsubC, appsubR)
 import Equations
 -- equalize is a helper function used to define getinstanceleft and getinstanceleftright
+-- Example
+-- t1 = F "f" [V 1, F "f" [V 2]]
+-- t2 = F "f" [V 3, V 4]
 equalize :: Term -> Term -> [(Varname, Term)]
 equalize t1 t2 = case t1 of
     (V x) -> case t2 of
@@ -85,11 +88,11 @@ type Proofstate = (Equations, Hypothesis)
 --
 -- sum2 = [R (F "sum2"[V 1]) (F "u" [V 1, F "0" [], F "0" []]) (B TT), R (F "u" [V 1, V 2, V 3]) (F "u" [V 1, F "+" [V 2, F "1" [] ], F "+" [V 3, V 2]]) (B (V 2 `Le` V 1)), R (F "u" [V 1, V 2, V 3]) (F "return" [V 3]) (N (B (V 2 `Le` V 1))) ]
 
--- !!CAUTION!! Suppose we want to apply SIMPLIFICATION on an equation
+-- !!CAUTION!! If we want to implement a SIMPLIFICATION-step on an equation
 -- e : f(x1,...,xn) ≈  f'(a1,...,am)  [Ce]
 -- with a rule
 -- r : g(y1,...,yi) -> g'(b1,...,bj)  [Cr]
--- and suppose that we have some substitution tau such that
+-- and a substitution tau such that
 -- g(y1,...,yi)*tau ~ f(x1,...,xn)
 -- Then before we can really do the SIMPLIFICATION we have to make sure that
 -- Ce -> Cr*tau holds for all assignments of the variables x1,..., xn, a1, ..., am
@@ -97,5 +100,6 @@ type Proofstate = (Equations, Hypothesis)
 -- For the moment we are ignoring this condition (since it requires the connection between haskell and a SAT-solver) but eventually we have to fix this.
 
 -- showsimpwithrule r es = [e in es such that we can (possibly) do SIMPLIFICATION with r on e]
+-- Example
 showsimpwithrule :: Rule -> Equations -> Equations
 showsimpwithrule r es = [e | e <- es, getinstancesleft r e /= []]
