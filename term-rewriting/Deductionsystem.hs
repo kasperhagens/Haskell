@@ -34,7 +34,7 @@ equalize t1 t2 = case t1 of
 -- and a rule
 -- r: g(y1,...,yi) -> g'(b1,...,bj)  [Cr]
 -- then getinstanceleft r e may (possibily) give the substitution tau such that
--- g(y1,...,yi)*tau ~ f(x1,...,xn), if such a tau may exists. If such a tau does not exist then getinstance r e = [].
+-- g(y1,...,yi)*tau ~ f(x1,...,xn), if such a tau may exists. If such a tau does not exist then getinstance r e = []. See Example 1 for the meaning of ~.
 --
 -- Example 1
 -- r : f(v1,v1) -> g(v1)  [true]
@@ -68,7 +68,7 @@ getinstanceleft :: Rule -> Equation -> Substitution
 getinstanceleft r e = Map.fromList (equalize (leftsideR r) (leftsideEQ e))
 
 getinstanceleftright :: Rule -> Equation -> Substitution
-getinstanceleftright r e = Map.fromList ((equalize (leftsideR r) (leftsideEQ e)) ++ (equalize (rightsideR r) (rightsideEQ e)))
+getinstanceleftright r e = Map.fromList (concatnoempties [equalize (leftsideR r) (leftsideEQ e), equalize (rightsideR r) (rightsideEQ e)])
 
 -- If r is a rule then
 -- getinstancesleft r e = [(s, t) | t is a subterm of the lefthand side of equation e such that the rule r*s is applicable to t]
