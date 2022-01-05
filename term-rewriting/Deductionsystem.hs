@@ -54,7 +54,7 @@ equalize t1 t2 = case t1 of
 -- However, the equality of these terms follows from the constraint.
 -- We denote f(v5,v5)~f(v4,v5).
 --
--- In getinstanceleftriht we also equalize the right-hand sides of the rule with the equation.
+-- In getinstanceleftright we also equalize the right-hand sides of the rule with the equation.
 -- Example 2
 -- r : u(v1,v2,v3) -> v1 + u(v4,v5,v6) [v5<=v1 /\ v1=v4+1 /\ v2=v5+1 /\ v3=v6+v5]
 -- e : u(v1,v7,v8) ≈  v1 + u(v4,v2,v3) [v5<=v1 /\ v1=v4+1 /\ v2=v5+1 /\ v3=v6+v5 /\ v2<=v1 /\ v7=v2+1 /\ v8=v3+v2]
@@ -111,14 +111,22 @@ type Proofstate = (Equations, Hypothesis)
 -- and a substitution tau such that
 -- g(y1,...,yi)*tau ~ f(x1,...,xn)
 -- Then before we can really do the SIMPLIFICATION we have to make sure that
--- Ce -> Cr*tau holds for all assignments of the variables x1,..., xn, a1, ..., am
+-- Ce -> Cr*tau holds for all assignments of the variables x1,...,xn,a1,...,am
 -- We need to check this with a SAT-solver
 -- For the moment we are ignoring this condition (since it requires the connection between haskell and a SAT-solver) but eventually we have to fix this.
 
--- showsimp rs es = [(e,r) | e <- es, r <- rs, such that we can (possibly) do SIMPLIFICATION with r on e]
+-- showsimp rs es = [(e,r) | e <- es, r <- rs such that we can (possibly) do SIMPLIFICATION with r on e]
 -- Example
+-- eqs : {sum1(v1)≈sum2(v1) [True], sum1(v1)≈sum3(v1) [True]}
+-- rs : {sum1(v2) -> return(0) [v2 <= 0],  sum2(v2) -> u(v2,0,0) [TT]}
+--
 -- eqs = [E (F "sum1" [V 1]) (F "sum2" [V 1]) (B TT), E (F "sum1" [V 1]) (F "sum3" [V 1]) (B TT)]
 -- rs = [R (F "sum1" [V 2]) (F "return" [F "0" []]) (B (V 2 `Le` F "0" [])), R (F "sum2"[V 2]) (F "u" [V 2, F "0" [], F "0" []]) (B TT)]
 -- showsimp rs eqs =
+-- [
+-- (sum1(v1)~sum2(v1) [True], sum1(v2)->return(0) [v2<=0]),
+-- (sum1(v1)~sum2(v1) [True], sum2(v2)->u(v2,0,0) [True]),
+-- (sum1(v1)~sum3(v1) [True], sum1(v2)->return(0) [v2<=0])
+-- ]
 showsimp :: Rules -> Equations -> [(Equation, Rule)]
 showsimp rs es = List.nub [(e,r) | e <- es, r <- rs, getinstancesleft r e /= [] || getinstancesleft r (reverseEQ e) /= []]
