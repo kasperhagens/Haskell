@@ -6,13 +6,20 @@
 -- The goal is to start with a set of equations E and, by using the interference rules, finding a deduction sequence (E,Ø) ⊢ ... ⊢ (Ø,H)
 module Deductionsystem where
 import qualified Data.Map as Map
-import Terms (Term(..), Varname, Substitution, appsub, subterms)
+import Terms (Term(..), Varname, Substitution, appsub, subterms, mgu)
 import Rules (Basicformula(..), Constraint(..), Rule (..), leftsideR, rightsideR, appsubC, appsubR)
 import Equations
 -- equalize is a helper function used to define getinstanceleft and getinstanceleftright
 -- Example
 -- t1 = F "f" [V 1, F "f" [V 2]]
 -- t2 = F "f" [V 3, V 4]
+
+-- concatnoempties y = concat y <=> all lists in y are non-empty
+-- otherwise concatnoempties y = []
+-- we use this function to define equalize
+concatnoempties :: [[a]] -> [a]
+concatnoempties y = if all (\ls->length(ls)>0) y then concat y else []
+
 equalize :: Term -> Term -> [(Varname, Term)]
 equalize t1 t2 = case t1 of
     (V x) -> case t2 of
@@ -20,7 +27,7 @@ equalize t1 t2 = case t1 of
         (F f ts) -> [(x, F f ts)]
     (F f ts) -> case t2 of
         (V y) ->[]
-        (F g qs) -> if (f/=g || length(ts)/=length(qs)) then [] else (concat [ equalize a b | (a,b) <- (zip ts qs)])
+        (F g qs) -> if (f/=g || length(ts)/=length(qs)) then [] else (concatnoempties [ equalize a b | (a,b) <- (zip ts qs)])
 
 -- If we have an equation
 -- e: f(x1,...,xn) ≈  f'(a1,...,am)  [Ce]
