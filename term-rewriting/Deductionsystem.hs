@@ -10,6 +10,7 @@ import Terms (Term(..), Varname, Substitution, appsub, subterms, mgu)
 import Rules (Basicformula(..), Constraint(..), Rule (..), leftsideR, rightsideR, appsubC, appsubR)
 import Equations
 import qualified Data.List as List
+import Prelude hiding (Left, Right)
 -- equalize is a helper function used to define getinstanceleft and getinstanceleftright
 -- Example
 -- t1 = F "f" [V 1, F "f" [V 2]]
@@ -88,21 +89,25 @@ getinstancesleft r e = [(Map.fromList (equalize (leftsideR r) t), t) | t <- subt
 type Rules = [Rule]
 type Hypothesis = [Rule]
 type Equations = [Equation]
--- A proofstate as a tuple (E,H) where E is a set of equations and H is a set of induction hypothesis.
-type Proofstate = (Equations, Hypothesis)
 
 -- Example (from the seminar-document, page 102, slide 30)
--- sum1(x) -> return(0)             [x<=0]
--- sum1(x) -> x + sum(x-1))         [x>=0]
--- x + return(y) -> return (x+y)    [True]
+-- r1 : sum1(x) -> return(0)             [x<=0]
+-- r2 : sum1(x) -> x + sum(x-1))         [x>=0]
+-- r3 : x + return(y) -> return (x+y)    [True]
 --
--- sum2(x) -> u(x,0,0)              [True]
--- u(x,i,z) -> u(x,i+1,z+i)         [i<=x]
--- u(x,i,z) -> return(z)            [not (i<=x)]
+-- r4 : sum2(x) -> u(x,0,0)              [True]
+-- r5 : u(x,i,z) -> u(x,i+1,z+i)         [i<=x]
+-- r6 : u(x,i,z) -> return(z)            [not (i<=x)]
 --
--- sum1 = [R (F "sum1" [V 1]) (F "return" [F "0" []]) (B (V 1 `Le` F "0" [])), R (F "sum1" [V 1]) (F "+" [V 1, F "sum1" [F "-" [V 1, F "1" []]]]) (B (V 1 `Ge` F "0" [])), R (F "+" [V 1, F "return" [V 2]]) (F "return"[F "+" [V 1, V 2]]) (B TT)]
+-- r1 = R (F "sum1" [V 1]) (F "return" [F "0" []]) (B (V 1 `Le` F "0" []))
+-- r2 = R (F "sum1" [V 1]) (F "+" [V 1, F "sum1" [F "-" [V 1, F "1" []]]]) (B (V 1 `Ge` F "0" []))
+-- r3 = R (F "+" [V 1, F "return" [V 2]]) (F "return"[F "+" [V 1, V 2]]) (B TT)
+-- sum1 = [r1, r2, r3]
 --
--- sum2 = [R (F "sum2"[V 1]) (F "u" [V 1, F "0" [], F "0" []]) (B TT), R (F "u" [V 1, V 2, V 3]) (F "u" [V 1, F "+" [V 2, F "1" [] ], F "+" [V 3, V 2]]) (B (V 2 `Le` V 1)), R (F "u" [V 1, V 2, V 3]) (F "return" [V 3]) (N (B (V 2 `Le` V 1))) ]
+-- r4 = R (F "sum2"[V 1]) (F "u" [V 1, F "0" [], F "0" []]) (B TT)
+-- r5 = R (F "u" [V 1, V 2, V 3]) (F "u" [V 1, F "+" [V 2, F "1" [] ], F "+" [V 3, V 2]]) (B (V 2 `Le` V 1))
+-- r6 = R (F "u" [V 1, V 2, V 3]) (F "return" [V 3]) (N (B (V 2 `Le` V 1)))
+-- sum2 = [r4, r5, r6]
 
 -- !!CAUTION!! If we want to implement a SIMPLIFICATION-step on an equation
 -- e : f(x1,...,xn) ≈  f'(a1,...,am)  [Ce]
@@ -115,18 +120,29 @@ type Proofstate = (Equations, Hypothesis)
 -- We need to check this with a SAT-solver
 -- For the moment we are ignoring this condition (since it requires the connection between haskell and a SAT-solver) but eventually we have to fix this.
 
--- showsimp rs es = [(e,r) | e <- es, r <- rs such that we can (possibly) do SIMPLIFICATION with r on e]
+-- showsimp rs es = [(e,r,s) | e <- es, r <- rs such that we can (possibly) do SIMPLIFICATION with r on side s of equation e]
 -- Example
 -- eqs : {sum1(v1)≈sum2(v1) [True], sum1(v1)≈sum3(v1) [True]}
 -- rs : {sum1(v2) -> return(0) [v2 <= 0],  sum2(v2) -> u(v2,0,0) [TT]}
 --
--- eqs = [E (F "sum1" [V 1]) (F "sum2" [V 1]) (B TT), E (F "sum1" [V 1]) (F "sum3" [V 1]) (B TT)]
--- rs = [R (F "sum1" [V 2]) (F "return" [F "0" []]) (B (V 2 `Le` F "0" [])), R (F "sum2"[V 2]) (F "u" [V 2, F "0" [], F "0" []]) (B TT)]
+-- e1 = E (F "sum1" [V 1]) (F "sum2" [V 1]) (B TT)
+-- e2 = E (F "sum1" [V 1]) (F "sum3" [V 1]) (B TT)
+-- eqs = [e1, e2]
+-- r1 = R (F "sum1" [V 2]) (F "return" [F "0" []]) (B (V 2 `Le` F "0" []))
+-- r2 = R (F "sum2"[V 2]) (F "u" [V 2, F "0" [], F "0" []]) (B TT)
+-- rs = [r1, r2]
 -- showsimp rs eqs =
 -- [
 -- (sum1(v1)~sum2(v1) [True], sum1(v2)->return(0) [v2<=0]),
 -- (sum1(v1)~sum2(v1) [True], sum2(v2)->u(v2,0,0) [True]),
 -- (sum1(v1)~sum3(v1) [True], sum1(v2)->return(0) [v2<=0])
 -- ]
-showsimp :: Rules -> Equations -> [(Equation, Rule)]
-showsimp rs es = List.nub [(e,r) | e <- es, r <- rs, getinstancesleft r e /= [] || getinstancesleft r (reverseEQ e) /= []]
+data Side = Left | Right deriving (Eq, Show)
+showsimp :: Rules -> Equations -> [(Equation, Rule, Side)]
+showsimp rs es = List.nub [(e,r, Left) | e <- es, r <- rs, getinstancesleft r e /= [] ] ++ [(e,r, Right) | e <- es, r <- rs, getinstancesleft r (reverseEQ e) /= []]
+
+-- A proofstate as a tuple (E,H) where E is a set of equations and H is a set of induction hypothesis.
+type Proofstate = (Equations, Hypothesis)
+
+-- simplification :: Equation -> Side -> Term -> Proofstate -> Proofstate
+-- simplification e s t p = the proofstate obtained by applying SIMPLIFICATION on subterm t of equation e on side s.
