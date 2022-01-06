@@ -12,28 +12,6 @@ import Equations
 import qualified Data.List as List
 import Prelude hiding (Left, Right)
 
--- concatnoempties y = concat y <=> all lists in y are non-empty
--- otherwise concatnoempties y = []
--- we use this function to define equalize
-concatnoempties :: [[a]] -> [a]
-concatnoempties y = if all (\ls->length(ls)>0) y then concat y else []
-
--- equalize is a helper function used to define getinstanceleft and getinstanceleftright
--- equalize t1 t2 = the 'substitution' s such that t1*s may be an instance of t2 (depending on the constraints).
---
--- Example
--- t1 = F "f" [V 1, V 1]
--- t2 = F "f" [V 4, V 5]
--- equalize t1 t2 = [(1,v4),(1,v5)]
-equalize :: Term -> Term -> [(Varname, Term)]
-equalize t1 t2 = case t1 of
-    (V x) -> case t2 of
-        (V y) -> [(x, V y)]
-        (F f ts) -> [(x, F f ts)]
-    (F f ts) -> case t2 of
-        (V y) ->[]
-        (F g qs) -> if (f/=g || length(ts)/=length(qs)) then [] else (concatnoempties [ equalize a b | (a,b) <- (zip ts qs)])
-
 -- If we have an equation
 -- e: f(x1,...,xn) ≈  f'(a1,...,am)  [Ce]
 -- and a rule

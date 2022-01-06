@@ -85,9 +85,15 @@ equalize t1 t2 = case t1 of
         (V y) ->[]
         (F g qs) -> if (f/=g || length(ts)/=length(qs)) then [] else (concatnoempties [ equalize a b | (a,b) <- (zip ts qs)])
 
--- applyrule r t p = the term obtained by applying rule r on the subterm of t on position p
+-- replace t1 p t2 = the term obtained by replacing the subterm of t1 ocurring at position p by the term t2.
+-- replace :: Term -> Position -> Term -> Term
+
+-- applyrule r t p = the term obtained by applying rule r on the subterm of t occuring on  position p.
 -- If rule r is not applicable on any subterm of t then we define applyrule t p r = t.
 -- WARNING!! WE DO NOT CONSIDER THE CONSTRAINTS IN DETERMINING WHETHER RULE r IS APPLICABLE ON A SUBTERM OF t. HOWEVER, THE IDEA IS THAT WE CHECK THE POSSIBILITY OF APPLYING RULE r BEFORE WE AVOKE THIS FUNCTION.
 
 -- applyrule :: Rule -> Term -> Position -> Term
--- applyrule r t p = if (pos)
+-- applyrule r t p
+-- | postoterm t p /= Nothing =
+--    if (equalize (leftsideR r) (fromJust (postoterm t p))) /= [] then A else t
+-- | otherwise = t
