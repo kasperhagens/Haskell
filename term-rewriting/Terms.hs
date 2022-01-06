@@ -7,7 +7,7 @@ type Funcname = String
 type Varname = Int
 data Term = V Varname| F Funcname [Term] deriving (Eq)
 
--- convtoStr takes a string and concerts it to a string. Note that convtoStr t contains additional superfluous commas for any non-variable term t. For example convtoStr (F "f" [V "V 1"]) = f(v1,). Therefore, we wrote a function remsuperflcommas to remove the superfluous commas.
+-- convtoStr is used for defining instance Show of Term. Note that convtoStr t contains additional superfluous commas for any non-variable term t. For example convtoStr (F "f" [V "V 1"]) = f(v1,). Therefore, we wrote a function remsuperflcommas to remove the superfluous commas.
 convtoStr :: Term -> String
 convtoStr (V x) = "v"++(show x)
 convtoStr (F "+" [t1, t2]) = (convtoStr t1) ++ "+" ++ (convtoStr t2)
@@ -16,7 +16,7 @@ convtoStr (F "*" [t1, t2]) = (convtoStr t1) ++ "*" ++ (convtoStr t2)
 convtoStr (F f []) = f
 convtoStr (F f ts) = f ++ "(" ++ (concat [convtoStr t ++ "," | t <- ts]) ++ ")"
 
-remsuperflcommas::String ->String
+remsuperflcommas :: String -> String
 remsuperflcommas l = case l of
     (x:y:ys) -> if x==',' && y==')' then y:remsuperflcommas ys else x:remsuperflcommas (y:ys)
     (x:xs) -> x:xs
@@ -26,13 +26,13 @@ instance Show Term where
     show = remsuperflcommas.convtoStr
 
 type Position = [Int]
--- postoterm takes a position p and a term t and returns maybe the subterm of t occuring on position p (depending on whether p represents a valid position in t).
-postoterm :: Position -> Term -> Maybe Term
-postoterm [] (V x) = Just (V x)
-postoterm (y:ys) (V x) = Nothing
-postoterm [] (F f ts) = Just (F f ts)
-postoterm (x:xs) (F c [])= Just (F c [])
-postoterm (x:xs) (F f ts)= postoterm xs (ts!!x)
+-- postoterm t p = maybe the subterm of t occuring on position p (depending on whether p represents a valid position in t).
+postoterm :: Term -> Position -> Maybe Term
+postoterm (V x) [] = Just (V x)
+postoterm (V x) (y:ys) = Nothing
+postoterm (F f ts) [] = Just (F f ts)
+postoterm (F c []) (x:xs) = Just (F c [])
+postoterm (F f ts) (x:xs) = postoterm (ts!!x) xs
 
 -- pos is a helper function used for defining positions
 pos :: Term -> [Position]
@@ -52,7 +52,7 @@ positions t = List.nub [p | x <- pos t, p <- List.inits x]
 -- maysubterms is a helper function used to define the function subterms
 -- The function nub from Data.List removes duplicates elements from a list
 maysubterms :: Term -> [Maybe Term]
-maysubterms t = List.nub [postoterm p t | p <- positions t ]
+maysubterms t = List.nub [postoterm t p | p <- positions t ]
 
 -- subterms t = [subterms of t]
 subterms :: Term -> [Term]

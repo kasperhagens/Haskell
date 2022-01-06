@@ -11,10 +11,6 @@ import Rules (Basicformula(..), Constraint(..), Rule (..), leftsideR, rightsideR
 import Equations
 import qualified Data.List as List
 import Prelude hiding (Left, Right)
--- equalize is a helper function used to define getinstanceleft and getinstanceleftright
--- Example
--- t1 = F "f" [V 1, F "f" [V 2]]
--- t2 = F "f" [V 3, V 4]
 
 -- concatnoempties y = concat y <=> all lists in y are non-empty
 -- otherwise concatnoempties y = []
@@ -22,6 +18,13 @@ import Prelude hiding (Left, Right)
 concatnoempties :: [[a]] -> [a]
 concatnoempties y = if all (\ls->length(ls)>0) y then concat y else []
 
+-- equalize is a helper function used to define getinstanceleft and getinstanceleftright
+-- equalize t1 t2 = the 'substitution' s such that t1*s may be an instance of t2 (depending on the constraints).
+--
+-- Example
+-- t1 = F "f" [V 1, V 1]
+-- t2 = F "f" [V 4, V 5]
+-- equalize t1 t2 = [(1,v4),(1,v5)]
 equalize :: Term -> Term -> [(Varname, Term)]
 equalize t1 t2 = case t1 of
     (V x) -> case t2 of
@@ -133,10 +136,11 @@ type Equations = [Equation]
 -- rs = [r1, r2]
 -- showsimp rs eqs =
 -- [
--- (sum1(v1)~sum2(v1) [True], sum1(v2)->return(0) [v2<=0]),
--- (sum1(v1)~sum2(v1) [True], sum2(v2)->u(v2,0,0) [True]),
--- (sum1(v1)~sum3(v1) [True], sum1(v2)->return(0) [v2<=0])
+-- (sum1(v1)~sum2(v1) [True],sum1(v2)->return(0) [v2<=0],Left) ,
+-- (sum1(v1)~sum3(v1) [True],sum1(v2)->return(0) [v2<=0],Left) ,
+-- (sum1(v1)~sum2(v1) [True],sum2(v2)->u(v2,0,0) [True],Right)
 -- ]
+-- Note that the first two options in this list are non-valid SIMPLIFICATION posibilities. As said: we really have to filter out the valid ones by comparing the constraints with a SAT-solver.
 data Side = Left | Right deriving (Eq, Show)
 showsimp :: Rules -> Equations -> [(Equation, Rule, Side)]
 showsimp rs es = List.nub [(e,r, Left) | e <- es, r <- rs, getinstancesleft r e /= [] ] ++ [(e,r, Right) | e <- es, r <- rs, getinstancesleft r (reverseEQ e) /= []]
@@ -144,5 +148,5 @@ showsimp rs es = List.nub [(e,r, Left) | e <- es, r <- rs, getinstancesleft r e 
 -- A proofstate as a tuple (E,H) where E is a set of equations and H is a set of induction hypothesis.
 type Proofstate = (Equations, Hypothesis)
 
--- simplification :: Equation -> Side -> Term -> Proofstate -> Proofstate
--- simplification e s t p = the proofstate obtained by applying SIMPLIFICATION on subterm t of equation e on side s.
+-- simplification :: Equation -> Side -> Position -> Rule -> Proofstate -> Proofstate
+-- simplification e s p r ps = the proofstate obtained by applying SIMPLIFICATION on position p on side s of equation e with rule r.
