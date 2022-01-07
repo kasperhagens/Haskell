@@ -6,8 +6,8 @@
 -- The goal is to start with a set of equations E and, by using the interference rules, finding a deduction sequence (E,Ø) ⊢ ... ⊢ (Ø,H)
 module Deductionsystem where
 import qualified Data.Map as Map
-import Terms (Term(..), Varname, Substitution, appsub, subterms, mgu)
-import Rules (Basicformula(..), Constraint(..), Rule (..), leftsideR, rightsideR, appsubC, appsubR, equalize, concatnoempties)
+import Terms (Term(..), Varname, Substitution, Position, appsub, subterms, mgu)
+import Rules (Basicformula(..), Constraint(..), Rule (..), leftsideR, rightsideR, appsubC, appsubR, equalize, concatnoempties, applyrule, replaceNthElt)
 import Equations
 import qualified Data.List as List
 import Prelude hiding (Left, Right)
@@ -126,8 +126,15 @@ showsimp rs es = List.nub [(e,r, Left) | e <- es, r <- rs, getinstancesleft r e 
 -- A proofstate as a tuple (E,H) where E is a set of equations and H is a set of induction hypothesis.
 type Proofstate = (Equations, Hypothesis)
 
--- simplification :: Int -> Side -> Position -> Rule -> Proofstate -> Proofstate
 -- simplification n s p r (eqs, hs) = the proofstate obtained by applying SIMPLIFICATION on position p on side s of the nth equation (counting starts at 0) in eqs with rule r.
--- simplification n s p r (eqs, hs)
--- s==Left = (,hs)
--- otherwise =
+simplification :: Int -> Side -> Position -> Rule -> Proofstate -> Proofstate
+simplification n s p r (eqs, hs) = if n<0 || n >= length eqs then (eqs, hs) else
+    case s of
+    Left -> (replaceNthElt eqs n (E e1 e2 c), hs)
+        where e1 = applyrule r (leftsideEQ (eqs!!n)) p
+              e2 = rightsideEQ (eqs!!n)
+              c =  constraintEQ (eqs !! n)
+    Right -> (replaceNthElt eqs n (E e1 e2 c), hs)
+        where e1 = leftsideEQ (eqs!!n)
+              e2 = applyrule r (rightsideEQ (eqs!!n)) p
+              c = constraintEQ (eqs !! n)

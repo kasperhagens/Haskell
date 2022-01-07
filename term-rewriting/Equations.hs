@@ -18,6 +18,9 @@ leftsideEQ (E t1 t2 c) = t1
 rightsideEQ :: Equation -> Term
 rightsideEQ (E t1 t2 c) = t2
 
+constraintEQ :: Equation -> Constraint
+constraintEQ (E t1 t2 c) = c
+
 reverseEQ :: Equation -> Equation
 reverseEQ (E t1 t2 c) = E t2 t1 c
 
