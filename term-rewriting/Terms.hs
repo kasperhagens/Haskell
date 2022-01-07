@@ -1,5 +1,5 @@
 
-module Terms (Term(..), Substitution, Varname, postoterm, positions, subterms, issubterm, varin, vars, funcs, substitute, appsub, mgu) where
+module Terms (Term(..), Substitution, Varname, postoterm, positions, subterms, issubterm, varin, vars, funcs, substitute, appsub, mgu, Position) where
 import qualified Data.Map as Map
 import qualified Data.List as List
 import Distribution.Simple.Utils (xargs)

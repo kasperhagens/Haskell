@@ -1,6 +1,6 @@
 module Rules where
 import qualified Data.Map as Map
-import Terms ( Term(..), Varname, Substitution, appsub)
+import Terms ( Term(..), Varname, Substitution, appsub, Position, postoterm)
 data Basicformula =   TT
                     | FF
                     | Eq Term Term
@@ -85,8 +85,31 @@ equalize t1 t2 = case t1 of
         (V y) ->[]
         (F g qs) -> if (f/=g || length(ts)/=length(qs)) then [] else (concatnoempties [ equalize a b | (a,b) <- (zip ts qs)])
 
+-- replaceNthElt xs i y = the list obtained obtained from xs by replacing the element occuring at position i by y. In case i<0 or or i>"last index of xs" we do nothing.
+-- Example
+-- replaceNthElt [0,0,0,0] 2 1 = [0,0,1,0]
+replaceNthElt :: [a] -> Int -> a -> [a]
+replaceNthElt [] i y = []
+replaceNthElt (x:xs) i y
+    | (i<0 || i> length(xs)) = x:xs
+    | otherwise = if i==0 then (y:xs) else x:replaceNthElt xs (i-1) y
+
 -- replace t1 p t2 = the term obtained by replacing the subterm of t1 ocurring at position p by the term t2.
--- replace :: Term -> Position -> Term -> Term
+-- Example
+-- t1 = f(f(v1, v2), g(v1))
+-- t2 = h(v1)
+--
+-- t1 = F "f" [F "f" [V 1, V 2], F "g" [V 1]]
+-- t2 = F "h" [V 1]
+-- replace t1 [0] t2 = f(h(v1),g(v1))
+-- replace t1 [0,0] t2 = f(f(h(v1),v2),g(v1))
+-- replace t1 [1,1] t2 = f(f(v1, v2), g(v1))
+replace :: Term -> Position -> Term -> Term
+replace t1 [] t2 = t2
+replace (V x) p t = V x
+replace (F f ts) (i:p) t
+    | (i<0 || i>= length(ts)) = F f ts
+    | otherwise = F f (replaceNthElt ts i (replace (ts!!i) p t))
 
 -- applyrule r t p = the term obtained by applying rule r on the subterm of t occuring on  position p.
 -- If rule r is not applicable on any subterm of t then we define applyrule t p r = t.
