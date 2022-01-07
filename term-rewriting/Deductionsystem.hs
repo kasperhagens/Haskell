@@ -126,5 +126,8 @@ showsimp rs es = List.nub [(e,r, Left) | e <- es, r <- rs, getinstancesleft r e 
 -- A proofstate as a tuple (E,H) where E is a set of equations and H is a set of induction hypothesis.
 type Proofstate = (Equations, Hypothesis)
 
--- simplification :: Equation -> Side -> Position -> Rule -> Proofstate -> Proofstate
--- simplification e s p r ps = the proofstate obtained by applying SIMPLIFICATION on position p on side s of equation e with rule r.
+-- simplification :: Int -> Side -> Position -> Rule -> Proofstate -> Proofstate
+-- simplification n s p r (eqs, hs) = the proofstate obtained by applying SIMPLIFICATION on position p on side s of the nth equation (counting starts at 0) in eqs with rule r.
+-- simplification n s p r (eqs, hs)
+-- s==Left = (,hs)
+-- otherwise =
