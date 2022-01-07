@@ -126,7 +126,35 @@ showsimp rs es = List.nub [(e,r, Left) | e <- es, r <- rs, getinstancesleft r e 
 -- A proofstate as a tuple (E,H) where E is a set of equations and H is a set of induction hypothesis.
 type Proofstate = (Equations, Hypothesis)
 
+-- SIMPLIFICATION
 -- simplification n s p r (eqs, hs) = the proofstate obtained by applying SIMPLIFICATION on position p on side s of the nth equation (counting starts at 0) in eqs with rule r.
+-- In case of invalid n, p or then  implification n s p r (eqs, hs) = (eqs, hs)
+--Example
+-- eqs : {sum1(v1)≈sum2(v1) [True], sum1(v1)≈sum3(v1) [True]}
+-- rs : {sum1(v2) -> return(0) [v2 <= 0],  sum2(v2) -> u(v2,0,0) [TT]}
+-- ps = (eqs, [])
+--
+-- e0 = E (F "sum1" [V 1]) (F "sum2" [V 1]) (B TT)
+-- e1 = E (F "sum1" [V 1]) (F "sum3" [V 1]) (B TT)
+-- eqs = [e0, e1]
+-- r0 = R (F "sum1" [V 2]) (F "return" [F "0" []]) (B (V 2 `Le` F "0" []))
+-- r1 = R (F "sum2"[V 2]) (F "u" [V 2, F "0" [], F "0" []]) (B TT)
+-- rs = [r0, r1]
+-- ps = (eqs, [])
+--
+-- simplification 0 Left [] (rs!!0) ps
+-- =
+-- ([return(0)~sum2(v1) [True],sum1(v1)~sum3(v1) [True]],[])
+--
+--
+-- simplification 1 Left [] (rs!!0) ps
+-- =
+-- ([sum1(v1)~sum2(v1) [True],return(0)~sum3(v1) [True]],[])
+--
+--
+-- simplification 0 Right [] (rs!!1) ps
+-- =
+-- ([sum1(v1)~u(v1,0,0) [True],sum1(v1)~sum3(v1) [True]],[])
 simplification :: Int -> Side -> Position -> Rule -> Proofstate -> Proofstate
 simplification n s p r (eqs, hs) = if n<0 || n >= length eqs then (eqs, hs) else
     case s of
