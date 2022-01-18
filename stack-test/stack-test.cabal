@@ -25,7 +25,10 @@ source-repository head
 
 library
   exposed-modules:
-      Data.Foo
+      Data.Deductionsystem
+      Data.Equations
+      Data.Rules
+      Data.Terms
       Lib
   other-modules:
       Paths_stack_test
@@ -33,6 +36,7 @@ library
       src
   build-depends:
       base >=4.7 && <5
+    , containers
     , z3
   default-language: Haskell2010
 
@@ -45,6 +49,7 @@ executable stack-test-exe
   ghc-options: -threaded -rtsopts -with-rtsopts=-N
   build-depends:
       base >=4.7 && <5
+    , containers
     , stack-test
     , z3
   default-language: Haskell2010
@@ -53,6 +58,7 @@ test-suite stack-test-test
   type: exitcode-stdio-1.0
   main-is: Spec.hs
   other-modules:
+      UnitTest.Terms
       Z3
       Paths_stack_test
   hs-source-dirs:
@@ -60,6 +66,7 @@ test-suite stack-test-test
   ghc-options: -threaded -rtsopts -with-rtsopts=-N
   build-depends:
       base >=4.7 && <5
+    , containers
     , stack-test
     , z3
   default-language: Haskell2010
