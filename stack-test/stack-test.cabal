@@ -25,11 +25,8 @@ source-repository head
 
 library
   exposed-modules:
-      Deductionsystem
-      Equations
+      Data.Foo
       Lib
-      Rules
-      Terms
   other-modules:
       Paths_stack_test
   hs-source-dirs:

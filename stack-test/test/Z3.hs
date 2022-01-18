@@ -32,9 +32,9 @@ getValue = do
     aMb <- mkMul [a,b]
     aAb <- mkAdd [a,b]
     _0 <- mkInteger 0
-    assert =<< aMb `mkLt` aAb
-    assert =<< a `mkGt` _0
-    assert =<< b `mkGt` _0
+    assert =<< aMb `mkLt` aAb --a*b<a+b
+    assert =<< a `mkGt` _0    --a>0
+    assert =<< b `mkGt` _0    --b>0
 
     snd <$> (withModel $ (\m -> fromJust <$> evalInt m a))
 
