@@ -1,7 +1,12 @@
 module Data.Rules where
 import qualified Data.Map as Map
 import qualified Data.Maybe as Maybe
-import Data.Terms ( Term(..), Varname, Substitution, appsub, Position, postoterm)
+import Data.Terms ( Term(..),
+                    Varname,
+                    Substitution,
+                    appsub,
+                    Position,
+                    postoterm)
 data Basicformula =   TT
                     | FF
                     | Eq Term Term

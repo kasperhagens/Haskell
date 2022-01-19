@@ -3,8 +3,8 @@
 -- source: https://arxiv.org/abs/1409.0166
 module Data.Equations where
 import qualified Data.Map as Map
-import Terms (Term(..), Varname, Substitution, appsub)
-import Rules (Basicformula(..), Constraint(..), Rule (..), leftsideR, rightsideR, appsubC, appsubR)
+import Data.Terms (Term(..), Varname, Substitution, appsub)
+import Data.Rules (Basicformula(..), Constraint(..), Rule (..), leftsideR, rightsideR, appsubC, appsubR)
 
 --Example of equation
 --E (F "f" [V 1]) (F "g" [V 2]) (B (V 1 `Le` V 2))

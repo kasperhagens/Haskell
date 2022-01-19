@@ -3,7 +3,7 @@ module Data.Terms (
     Term(..),
     Substitution,
     Varname,
-
+    Position,
     postoterm,
     positions,
     subterms,
@@ -14,7 +14,6 @@ module Data.Terms (
     substitute,
     appsub,
     mgu,
-    Position
 ) where
 
 import qualified Data.Map as Map
