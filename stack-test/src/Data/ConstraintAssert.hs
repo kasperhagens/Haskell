@@ -21,10 +21,10 @@ makeTerm (F "-" [t1,t2]) = do
                                 mkSub [a,b]
 
 -- We only allow terms with functionsymbols +, - and *
-makeTerm t= mkFalse
+makeTerm t = mkFalse
 
 constraintassertB :: Basicformula -> Z3()
-constraintassert TT = do
+constraintassertB TT = do
                     tt <- mkTrue
                     assert tt
 
@@ -33,7 +33,29 @@ constraintassertB FF = do
                     assert ff
 
 constraintassertB (Eq t1 t2) = do
-                                    a <- makeTerm t1
-                                    b <- makeTerm t2
-                                    assert =<< (mkEq a b)
+                    a <- makeTerm t1
+                    b <- makeTerm t2
+                    assert =<< (mkEq a b)
 
+constraintassertB (Lt t1 t2) = do
+                    a <- makeTerm t1
+                    b <- makeTerm t2
+                    assert =<< (mkLt a b)
+
+constraintassertB (Le t1 t2) = do
+                    a <- makeTerm t1
+                    b <- makeTerm t2
+                    assert =<< (mkLe a b)
+
+constraintassertB (Gt t1 t2) = do
+                    a <- makeTerm t1
+                    b <- makeTerm t2
+                    assert =<< (mkGt a b)
+
+constraintassertB (Ge t1 t2) = do
+                    a <- makeTerm t1
+                    b <- makeTerm t2
+                    assert =<< (mkGe a b)
+
+constraintassert :: Constraint -> Z3()
+constraintassert (B f) = constraintassertB f
