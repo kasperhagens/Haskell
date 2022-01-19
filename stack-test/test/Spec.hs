@@ -3,6 +3,5 @@ import UnitTest.Terms
 main :: IO ()
 main = do
     putStrLn "Test suite not yet implemented"
-    Z.printResult
-    printTest
-
+--    Z.printResult
+--    printTest
