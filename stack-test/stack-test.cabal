@@ -25,10 +25,11 @@ source-repository head
 
 library
   exposed-modules:
-      Data.ConstraintAssert
+      Data.AssertConstraint
       Data.Constraints
       Data.Deductionsystem
       Data.Equations
+      Data.MakeConstraint
       Data.Rules
       Data.Terms
       Lib
