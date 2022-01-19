@@ -7,7 +7,8 @@
 module Data.Deductionsystem where
 import qualified Data.Map as Map
 import Data.Terms (Term(..), Varname, Substitution, Position, appsub, subterms, mgu)
-import Data.Rules (Basicformula(..), Constraint(..), Rule (..), leftsideR, rightsideR, appsubC, appsubR, equalize, concatnoempties, applyrule, replaceNthElt)
+import Data.Constraints
+import Data.Rules ( Rule (..), leftsideR, rightsideR, appsubR, equalize, concatnoempties, applyrule, replaceNthElt)
 import Data.Equations
 import qualified Data.List as List
 import Prelude hiding (Left, Right)

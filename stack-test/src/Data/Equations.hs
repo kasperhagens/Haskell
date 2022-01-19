@@ -4,7 +4,8 @@
 module Data.Equations where
 import qualified Data.Map as Map
 import Data.Terms (Term(..), Varname, Substitution, appsub)
-import Data.Rules (Basicformula(..), Constraint(..), Rule (..), leftsideR, rightsideR, appsubC, appsubR)
+import Data.Rules (Rule (..), leftsideR, rightsideR, appsubR)
+import Data.Constraints
 
 --Example of equation
 --E (F "f" [V 1]) (F "g" [V 2]) (B (V 1 `Le` V 2))
