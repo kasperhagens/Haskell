@@ -1,4 +1,4 @@
-module UnitTest.Z3 where
+module Z3 where
 import Z3.Monad
 import Data.Terms
 import Data.Equations
@@ -47,8 +47,6 @@ getValue = do
     assert =<< a `mkGt` _0    --a>0
     assert =<< b `mkGt` _0    --b>0
     snd <$> (withModel $ (\m -> fromJust <$> evalInt m a))
-
-
 
 printResult :: IO ()
 printResult = do
