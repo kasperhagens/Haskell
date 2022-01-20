@@ -7,7 +7,11 @@ import Data.Terms
 -- import PrelNames (c1TyConKey)
 
 makeTerm :: Term -> Z3 AST
-makeTerm (V x) = mkFreshIntVar (show (V x))
+makeTerm (V x) =  do
+                                s <- mkIntSymbol x
+                                mkIntVar s
+
+    --mkFreshIntVar (show (V x))
 makeTerm (F i [])= mkInteger (read i)
 makeTerm (F "+" [t1,t2]) = do
                                 a <- makeTerm t1

@@ -6,12 +6,14 @@ import Data.Constraints
 import Data.Make
 import Data.Assert
 import Data.Maybe
--- A simple check
+-- Some simple checks
 -- v0>2 -> v0>0 or equivalently not(v0>2) \/ v0>0
-c = Or (N (B ( V 0 `Gt` F "2" []))) (B (V 0 `Gt` F "2" []))
+cstr = Or (N (B ( V 0 `Gt` F "2" []))) (B (V 0 `Gt` F "0" []))
+-- cstr = And (B ( V 0 `Gt` F "0" [])) (B (V 0 `Lt` F "0" []))
+-- cstr = B ((F "1" []) `Gt` (F "0" []))
 script :: Z3 ()
 script = do
-        assertConstraint c
+        assertConstraint cstr
 --     a <- mkFreshIntVar "a"
 --     b <- mkFreshIntVar "b"
 --     aMb <- mkMul [a,b]
@@ -35,15 +37,14 @@ returnModel = do
 
 getValue :: Z3 (Maybe Integer)
 getValue = do
---    a <- mkFreshIntVar "a"
---    b <- mkFreshIntVar "a"
---    aMb <- mkMul [a,b]
---    aAb <- mkAdd [a,b]
---    _0 <- mkInteger 0
---    assert =<< aMb `mkLt` aAb --a*b<a+b
---    assert =<< a `mkGt` _0    --a>0
---    assert =<< b `mkGt` _0    --b>0
-    assertConstraint c
+    a <- mkFreshIntVar "a"
+    b <- mkFreshIntVar "a"
+    aMb <- mkMul [a,b]
+    aAb <- mkAdd [a,b]
+    _0 <- mkInteger 0
+    assert =<< aMb `mkLt` aAb --a*b<a+b
+    assert =<< a `mkGt` _0    --a>0
+    assert =<< b `mkGt` _0    --b>0
     snd <$> (withModel $ (\m -> fromJust <$> evalInt m a))
 
 
@@ -58,5 +59,5 @@ printResult = do
         Just model -> do
             m' <- evalZ3 $ modelToString model
             putStrLn $ concat ["The string of the model is\n", m']
-    a <- evalZ3 getValue
-    print a
+--    a <- evalZ3 getValue
+--    print a
