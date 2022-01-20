@@ -32,6 +32,7 @@ library
       Data.Make
       Data.Rules
       Data.Terms
+      Data.ZZ
       Lib
   other-modules:
       Paths_stack_test

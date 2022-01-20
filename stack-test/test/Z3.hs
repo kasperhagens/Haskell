@@ -7,8 +7,9 @@ import Data.Make
 import Data.Assert
 import Data.Maybe
 -- Some simple checks
--- v0>2 -> v0>0 or equivalently not(v0>2) \/ v0>0
-cstr = Or (N (B ( V 0 `Gt` F "2" []))) (B (V 0 `Gt` F "0" []))
+-- forall v0 [v0>0 -> v0>2] <=> forall v0 [not(v0>0) \/ v0>2]
+-- Note: a formula phi holds universally iff not(phi) has no model
+cstr = N (Or (N (B ( V 0 `Gt` F "2" []))) (B (V 0 `Gt` F "0" [])))
 -- cstr = And (B ( V 0 `Gt` F "0" [])) (B (V 0 `Lt` F "0" []))
 -- cstr = B ((F "1" []) `Gt` (F "0" []))
 script :: Z3 ()

@@ -1,5 +1,6 @@
 module Data.Constraints where
 import Data.Terms
+
 data Basicformula =   TT
                     | FF
                     | Eq Term Term
@@ -46,3 +47,6 @@ appsubC s (B f) = B (appsubB s f)
 appsubC s (Or c1 c2) = Or (appsubC s c1) (appsubC s c2)
 appsubC s (And c1 c2) = And (appsubC s c1) (appsubC s c2)
 appsubC s (N c) = N (appsubC s c)
+
+-- uConstraintCheck c checks whether constraint c holds universally, i.e. whether not c has no model
+uConstraintCheck :: Constraint -> Bool
