@@ -32,7 +32,7 @@ library
       Data.Make
       Data.Rules
       Data.Terms
-      Data.ZZ
+      Data.Zz
       Lib
   other-modules:
       Paths_stack_test
@@ -64,7 +64,6 @@ test-suite stack-test-test
   type: exitcode-stdio-1.0
   main-is: Spec.hs
   other-modules:
-      UnitTest.Terms
       Z3
       Paths_stack_test
   hs-source-dirs:

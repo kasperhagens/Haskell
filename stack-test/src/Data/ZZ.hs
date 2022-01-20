@@ -1,4 +1,4 @@
-module Data.ZZ where
+module Data.Zz where
 import Z3.Monad
 import Data.Terms
 import Data.Equations

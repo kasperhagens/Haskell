@@ -1,8 +1,8 @@
-module Z3 where
+module UnitTest.Z3 where
 import Z3.Monad
 import Data.Terms
 import Data.Equations
-import Data.Constraints
+import Data.Constraints ( Basicformula(Gt), Constraint(B, Or, N) )
 import Data.Make
 import Data.Assert
 import Data.Maybe
