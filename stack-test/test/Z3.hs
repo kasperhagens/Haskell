@@ -11,8 +11,7 @@ import Data.Maybe
 c = Or (N (B ( V 0 `Gt` F "2" []))) (B (V 0 `Gt` F "2" []))
 script :: Z3 ()
 script = do
-
-    assertConstraint c
+        assertConstraint c
 --     a <- mkFreshIntVar "a"
 --     b <- mkFreshIntVar "b"
 --     aMb <- mkMul [a,b]
@@ -36,15 +35,15 @@ returnModel = do
 
 getValue :: Z3 (Maybe Integer)
 getValue = do
-    a <- mkFreshIntVar "a"
-    b <- mkFreshIntVar "a"
-    aMb <- mkMul [a,b]
-    aAb <- mkAdd [a,b]
-    _0 <- mkInteger 0
-    assert =<< aMb `mkLt` aAb --a*b<a+b
-    assert =<< a `mkGt` _0    --a>0
-    assert =<< b `mkGt` _0    --b>0
-
+--    a <- mkFreshIntVar "a"
+--    b <- mkFreshIntVar "a"
+--    aMb <- mkMul [a,b]
+--    aAb <- mkAdd [a,b]
+--    _0 <- mkInteger 0
+--    assert =<< aMb `mkLt` aAb --a*b<a+b
+--    assert =<< a `mkGt` _0    --a>0
+--    assert =<< b `mkGt` _0    --b>0
+    assertConstraint c
     snd <$> (withModel $ (\m -> fromJust <$> evalInt m a))
 
 
