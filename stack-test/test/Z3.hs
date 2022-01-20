@@ -1,18 +1,27 @@
 module Z3 where
-import Data.Maybe
 import Z3.Monad
-
+import Data.Terms
+import Data.Equations
+import Data.Constraints
+import Data.Make
+import Data.Assert
+import Data.Maybe
+-- A simple check
+-- v0>2 -> v0>0 or equivalently not(v0>2) \/ v0>0
+c = Or (N (B ( V 0 `Gt` F "2" []))) (B (V 0 `Gt` F "2" []))
 script :: Z3 ()
 script = do
-    a <- mkFreshIntVar "a"
-    b <- mkFreshIntVar "b"
-    aMb <- mkMul [a,b]
-    aAb <- mkAdd [a,b]
-    _0 <- mkInteger 0
-    _3 <- mkInteger 3
-    assert =<< aMb `mkLt` aAb
-    assert =<< a `mkGt` _0
-    assert =<< b `mkGt` _0
+
+    assertConstraint c
+--     a <- mkFreshIntVar "a"
+--     b <- mkFreshIntVar "b"
+--     aMb <- mkMul [a,b]
+--     aAb <- mkAdd [a,b]
+--     _0 <- mkInteger 0
+--     _3 <- mkInteger 3
+--     assert =<< aMb `mkLt` aAb
+--     assert =<< a `mkGt` _0
+--     assert =<< b `mkGt` _0
 
 checkSat :: Z3 Result
 checkSat = do

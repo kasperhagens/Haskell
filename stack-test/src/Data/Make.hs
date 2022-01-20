@@ -1,11 +1,14 @@
-module Data.MakeConstraint where
+-- For the moment we only allow constraints with functionsymbols +, - and *
+-- Any use of another functionsymbol will yield false.
+module Data.Make where
 import Z3.Monad
 import Data.Constraints
 import Data.Terms
-import PrelNames (c1TyConKey)
+-- import PrelNames (c1TyConKey)
 
 makeTerm :: Term -> Z3 AST
 makeTerm (V x) = mkFreshIntVar (show (V x))
+makeTerm (F i [])= mkInteger (read i)
 makeTerm (F "+" [t1,t2]) = do
                                 a <- makeTerm t1
                                 b <- makeTerm t2
