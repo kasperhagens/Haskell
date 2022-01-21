@@ -9,6 +9,7 @@ data Basicformula =   TT
                     | Gt Term Term
                     | Ge Term Term
                     deriving Eq
+
 instance Show Basicformula where
     show TT = "True"
     show FF = "False"
@@ -17,6 +18,7 @@ instance Show Basicformula where
     show (Le t1 t2) = (show t1) ++ "<="++ (show t2)
     show (Gt t1 t2) = (show t1) ++ ">" ++ (show t2)
     show (Ge t1 t2) = (show t1) ++ ">=" ++ (show t2)
+
 appsubB :: Substitution -> Basicformula -> Basicformula
 appsubB s (TT) = TT
 appsubB s (FF) = FF
@@ -35,6 +37,7 @@ data Constraint = B Basicformula
                 | And Constraint Constraint
                 | N Constraint
                 deriving Eq
+
 instance Show Constraint where
     show (B f) = show f
     show (Or f1 f2) = "(" ++ (show f1) ++ ")" ++ " or " ++ "(" ++ (show f2) ++ ")"

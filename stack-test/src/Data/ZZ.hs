@@ -14,7 +14,6 @@ checkConstraint cstr = do
 
 -- uConstraintCheck c checks whether constraint c holds universally, i.e. whether not c has no model
 uConstraintCheck :: Constraint -> IO Bool
-
 uConstraintCheck cstr = do
                     res <- evalZ3 (checkConstraint (N cstr))
                     if res == Unsat then return True else return False

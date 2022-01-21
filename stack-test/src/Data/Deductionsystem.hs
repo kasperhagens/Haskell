@@ -10,6 +10,7 @@ import Data.Terms (Term(..), Varname, Substitution, Position, appsub, subterms, 
 import Data.Constraints
 import Data.Rules ( Rule (..), leftsideR, rightsideR, appsubR, equalize, concatnoempties, applyrule, replaceNthElt)
 import Data.Equations
+import Data.Zz
 import qualified Data.List as List
 import Prelude hiding (Left, Right)
 
@@ -125,11 +126,16 @@ showsimp :: Rules -> Equations -> [(Equation, Rule, Side)]
 showsimp rs es = List.nub [(e,r, Left) | e <- es, r <- rs, getinstancesleft r e /= [] ] ++ [(e,r, Right) | e <- es, r <- rs, getinstancesleft r (reverseEQ e) /= []]
 
 -- A proofstate as a tuple (E,H) where E is a set of equations and H is a set of induction hypothesis.
+
+-- constraintEqImpRule e r = True <=> The constraint of rule e implies the constraint of constraint r
+constraintEqImpRule :: Equation -> Rule -> IO Bool
+constraintEqImpRule (E _ _ ce) (R _ _ cr) = uConstraintCheck (Or (N ce) cr)
+
 type Proofstate = (Equations, Hypothesis)
 
 -- SIMPLIFICATION
 -- simplification n s p r (eqs, hs) = the proofstate obtained by applying SIMPLIFICATION on position p on side s of the nth equation (counting starts at 0) in eqs with rule r.
--- In case of invalid n, p or then  implification n s p r (eqs, hs) = (eqs, hs)
+-- In case of invalid n, s, p or r implification n s p r (eqs, hs) = (eqs, hs)
 --Example
 -- eqs : {sum1(v1)≈sum2(v1) [True], sum1(v1)≈sum3(v1) [True]}
 -- rs : {sum1(v2) -> return(0) [v2 <= 0],  sum2(v2) -> u(v2,0,0) [TT]}
@@ -157,13 +163,17 @@ type Proofstate = (Equations, Hypothesis)
 -- =
 -- ([sum1(v1)~u(v1,0,0) [True],sum1(v1)~sum3(v1) [True]],[])
 simplification :: Int -> Side -> Position -> Rule -> Proofstate -> Proofstate
-simplification n s p r (eqs, hs) = if n<0 || n >= length eqs then (eqs, hs) else
-    case s of
-    Left -> (replaceNthElt eqs n (E e1 e2 c), hs)
-        where e1 = applyrule r (leftsideEQ (eqs!!n)) p
-              e2 = rightsideEQ (eqs!!n)
-              c =  constraintEQ (eqs !! n)
-    Right -> (replaceNthElt eqs n (E e1 e2 c), hs)
-        where e1 = leftsideEQ (eqs!!n)
-              e2 = applyrule r (rightsideEQ (eqs!!n)) p
-              c = constraintEQ (eqs !! n)
+simplification n s p r (eqs, hs) =
+    if n<0 || n >= length eqs
+        then
+            (eqs, hs)
+        else
+            case s of
+                Left -> (replaceNthElt eqs n (E e1 e2 c), hs)
+                    where   e1 = applyrule r (leftsideEQ (eqs!!n)) p
+                            e2 = rightsideEQ (eqs!!n)
+                            c =  constraintEQ (eqs !! n)
+                Right -> (replaceNthElt eqs n (E e1 e2 c), hs)
+                    where   e1 = leftsideEQ (eqs!!n)
+                            e2 = applyrule r (rightsideEQ (eqs!!n)) p
+                            c = constraintEQ (eqs !! n)
