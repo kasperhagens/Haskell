@@ -26,7 +26,8 @@ leftsideR (R t1 t2 c) = t1
 rightsideR :: Rule -> Term
 rightsideR (R t1 t2 c) = t2
 
--- replaceNthElt xs i y = the list obtained obtained from xs by replacing the element occuring at position i by y. In case i<0 or or i>"last index of xs" then we return xs itself.
+-- replaceNthElt is a helper function used to define replace.
+-- replaceNthElt xs i y = the list obtained obtained from xs by replacing the element occuring at position i by y. In case i<0 or or i>"last index of xs" we output xs itself.
 -- Example
 -- replaceNthElt [0,0,0,0] 2 1 = [0,0,1,0]
 replaceNthElt :: [a] -> Int -> a -> [a]
@@ -35,7 +36,7 @@ replaceNthElt (x:xs) i y
     | (i<0 || i> length(xs)) = x:xs
     | otherwise = if i==0 then y:xs else x:replaceNthElt xs (i-1) y
 
--- replace t1 p t2 = the term obtained by replacing the subterm of t1 ocurring at position p by the term t2. If p is a nonvalid position in t1 then t1 is returned.
+-- replace t1 p t2 = the term obtained by replacing the subterm of t1 ocurring at position p by the term t2. If p is a nonvalid position in t1 then we act as identity on t1.
 -- Example
 -- t1 = f(f(v1, v2), g(v1))
 -- t2 = h(v1)
@@ -54,8 +55,8 @@ replace (F f ts) (i:p) t
     | otherwise = F f (replaceNthElt ts i (replace (ts!!i) p t))
 
 -- applyrule r t p = the term obtained by applying rule r on the subterm of t occuring on  position p. If rule r is not applicable on the subterm of t occuring on position p then applyrule t p r = t.
--- WARNING!!
--- WE DO NOT CONSIDER THE CONSTRAINTS IN DETERMINING WHETHER RULE r IS REALLY APPLICABLE ON A SUBTERM OF t. IT COULD THEREFORE HAPPEN THAT applyrule WILL APPLY A RULE WHERE THIS IS NOT ALLOWED. THE IDEA IS THAT WE CHECK THE POSSIBILITY OF APPLYING RULE r BEFORE AVOKING THIS FUNCTION (WITH A SAT-SOLVER).
+-- !!WARNING!!
+-- WE DO NOT CONSIDER THE CONSTRAINTS TO DETERMINE WHETHER RULE r IS REALLY APPLICABLE ON A SUBTERM OF t. IT COULD THEREFORE HAPPEN THAT applyrule WILL APPLY A RULE WHERE THIS IS NOT ALLOWED. THE IDEA IS THAT WE CHECK THE POSSIBILITY OF APPLYING RULE r BEFORE AVOKING THIS FUNCTION.
 -- Example
 -- t = F "f" [F "g" [F "h" [V 1]]]
 -- r1 = R (F "g" [V 2]) (F "f" [V 2]) (B TT)

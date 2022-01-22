@@ -14,6 +14,7 @@ import Data.Terms (
     appsub,
     equalize,
     subterms,
+    concatnoempties,
     mgu)
 import Data.Constraints
 import Data.Rules (
@@ -21,14 +22,12 @@ import Data.Rules (
     leftsideR,
     rightsideR,
     appsubR,
-    concatnoempties,
     applyrule,
     replaceNthElt)
 import Data.Equations
 import Data.Zz
 import qualified Data.List as List
 import Prelude hiding (Left, Right)
-
 -- If we have an equation
 -- e: f(x1,...,xn) ≈  f'(a1,...,am)  [Ce]
 -- and a rule
@@ -87,12 +86,13 @@ getinstancesleft r e = [(Map.fromList (equalize (leftsideR r) t), t) | t <- subt
 type Rules = [Rule]
 type Hypothesis = [Rule]
 type Equations = [Equation]
-data Side = Left | Right deriving (Eq, Show)
 -- Example (from the seminar-document, page 102, slide 30)
+-- sum1:
 -- r1 : sum1(x) -> return(0)             [x<=0]
 -- r2 : sum1(x) -> x + sum(x-1))         [x>=0]
 -- r3 : x + return(y) -> return (x+y)    [True]
 --
+-- sum2:
 -- r4 : sum2(x) -> u(x,0,0)              [True]
 -- r5 : u(x,i,z) -> u(x,i+1,z+i)         [i<=x]
 -- r6 : u(x,i,z) -> return(z)            [not (i<=x)]
@@ -106,6 +106,16 @@ data Side = Left | Right deriving (Eq, Show)
 -- r5 = R (F "u" [V 1, V 2, V 3]) (F "u" [V 1, F "+" [V 2, F "1" [] ], F "+" [V 3, V 2]]) (B (V 2 `Le` V 1))
 -- r6 = R (F "u" [V 1, V 2, V 3]) (F "return" [V 3]) (N (B (V 2 `Le` V 1)))
 -- sum2 = [r4, r5, r6]
+data Side = Left | Right deriving (Eq, Show)
+-- constraintEqImpRule e r = True <=> The constraint of rule e implies the constraint of constraint r
+constraintEqImpRule :: Equation -> Rule -> IO Bool
+constraintEqImpRule (E e1 e2 ce) (R r1 r2 cr) =
+    if null tau
+        then
+            return False
+        else
+            uConstraintCheck (Or (N ce) (appsubC tau cr))
+    where tau = getinstanceleft (R r1 r2 cr) (E e1 e2 ce)
 
 -- !!CAUTION!! If we want to implement a SIMPLIFICATION-step on an equation
 -- e : f(x1,...,xn) ≈  f'(a1,...,am)  [Ce]
@@ -140,17 +150,6 @@ showsimp :: Rules -> Equations -> [(Equation, Rule, Side)]
 showsimp rs es = List.nub [(e,r, Left) | e <- es, r <- rs, getinstancesleft r e /= [] ] ++ [(e,r, Right) | e <- es, r <- rs, getinstancesleft r (reverseEQ e) /= []]
 
 -- A proofstate as a tuple (E,H) where E is a set of equations and H is a set of induction hypothesis.
-
--- constraintEqImpRule e r = True <=> The constraint of rule e implies the constraint of constraint r
-constraintEqImpRule :: Equation -> Rule -> IO Bool
-constraintEqImpRule (E e1 e2 ce) (R r1 r2 cr) =
-    if null tau
-        then
-            return False
-        else
-            uConstraintCheck (Or (N ce) (appsubC tau cr))
-    where tau = getinstanceleft (R r1 r2 cr) (E e1 e2 ce)
-
 type Proofstate = (Equations, Hypothesis)
 
 -- SIMPLIFICATION
