@@ -6,9 +6,24 @@
 -- The goal is to start with a set of equations E and, by using the interference rules, finding a deduction sequence (E,Ø) ⊢ ... ⊢ (Ø,H)
 module Data.Deductionsystem where
 import qualified Data.Map as Map
-import Data.Terms (Term(..), Varname, Substitution, Position, appsub, subterms, mgu)
+import Data.Terms (
+    Term(..),
+    Varname,
+    Substitution,
+    Position,
+    appsub,
+    equalize,
+    subterms,
+    mgu)
 import Data.Constraints
-import Data.Rules ( Rule (..), leftsideR, rightsideR, appsubR, equalize, concatnoempties, applyrule, replaceNthElt)
+import Data.Rules (
+    Rule (..),
+    leftsideR,
+    rightsideR,
+    appsubR,
+    concatnoempties,
+    applyrule,
+    replaceNthElt)
 import Data.Equations
 import Data.Zz
 import qualified Data.List as List
@@ -72,7 +87,7 @@ getinstancesleft r e = [(Map.fromList (equalize (leftsideR r) t), t) | t <- subt
 type Rules = [Rule]
 type Hypothesis = [Rule]
 type Equations = [Equation]
-
+data Side = Left | Right deriving (Eq, Show)
 -- Example (from the seminar-document, page 102, slide 30)
 -- r1 : sum1(x) -> return(0)             [x<=0]
 -- r2 : sum1(x) -> x + sum(x-1))         [x>=0]
@@ -121,7 +136,6 @@ type Equations = [Equation]
 -- (sum1(v1)~sum2(v1) [True],sum2(v2)->u(v2,0,0) [True],Right)
 -- ]
 -- Note that the first two options in this list are non-valid SIMPLIFICATION posibilities. As said: we really have to filter out the valid ones by comparing the constraints with a SAT-solver.
-data Side = Left | Right deriving (Eq, Show)
 showsimp :: Rules -> Equations -> [(Equation, Rule, Side)]
 showsimp rs es = List.nub [(e,r, Left) | e <- es, r <- rs, getinstancesleft r e /= [] ] ++ [(e,r, Right) | e <- es, r <- rs, getinstancesleft r (reverseEQ e) /= []]
 
@@ -135,7 +149,7 @@ constraintEqImpRule (E e1 e2 ce) (R r1 r2 cr) =
             return False
         else
             uConstraintCheck (Or (N ce) (appsubC tau cr))
-    where tau = getinstanceleft (R r1 r2 cr)(E e1 e2 ce)
+    where tau = getinstanceleft (R r1 r2 cr) (E e1 e2 ce)
 
 type Proofstate = (Equations, Hypothesis)
 
@@ -168,18 +182,25 @@ type Proofstate = (Equations, Hypothesis)
 -- simplification 0 Right [] (rs!!1) ps
 -- =
 -- ([sum1(v1)~u(v1,0,0) [True],sum1(v1)~sum3(v1) [True]],[])
-simplification :: Int -> Side -> Position -> Rule -> Proofstate -> Proofstate
+simplification :: Int -> Side -> Position -> Rule -> Proofstate -> IO Proofstate
 simplification n s p r (eqs, hs) =
-    if n<0 || n >= length eqs
-        then
-            (eqs, hs)
-        else
-            case s of
-                Left -> (replaceNthElt eqs n (E e1 e2 c), hs)
-                    where   e1 = applyrule r (leftsideEQ (eqs!!n)) p
-                            e2 = rightsideEQ (eqs!!n)
-                            c =  constraintEQ (eqs !! n)
-                Right -> (replaceNthElt eqs n (E e1 e2 c), hs)
-                    where   e1 = leftsideEQ (eqs!!n)
-                            e2 = applyrule r (rightsideEQ (eqs!!n)) p
-                            c = constraintEQ (eqs !! n)
+    do
+        if n<0 || n >= length eqs
+            then
+                return (eqs, hs)
+            else
+                do
+                    checkconstraint <- constraintEqImpRule (eqs !! n) r
+                    if checkconstraint
+                        then
+                            case s of
+                                Left -> return (replaceNthElt eqs n (E e1 e2 c), hs)
+                                    where   e1 = applyrule r (leftsideEQ (eqs!!n)) p
+                                            e2 = rightsideEQ (eqs!!n)
+                                            c =  constraintEQ (eqs !! n)
+                                Right -> return (replaceNthElt eqs n (E e1 e2 c), hs)
+                                    where   e1 = leftsideEQ (eqs!!n)
+                                            e2 = applyrule r (rightsideEQ (eqs!!n)) p
+                                            c = constraintEQ (eqs !! n)
+                        else
+                            return (eqs, hs)

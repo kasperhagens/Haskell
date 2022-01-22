@@ -6,7 +6,8 @@ import Data.Terms ( Term(..),
                     Substitution,
                     Position,
                     appsub,
-                    postoterm)
+                    postoterm,
+                    equalize)
 import Data.Constraints
 
 -- Example: the rule f(v1) -> g(v2) [v1 <= v2] is written as
@@ -24,28 +25,6 @@ leftsideR (R t1 t2 c) = t1
 
 rightsideR :: Rule -> Term
 rightsideR (R t1 t2 c) = t2
-
--- concatnoempties y = concat y <=> all lists in y are non-empty
--- otherwise concatnoempties y = []
--- we use this function to define equalize
-concatnoempties :: [[a]] -> [a]
-concatnoempties y = if all (\ls->not (null ls)) y then concat y else []
-
--- equalize is a helper function used to define getinstanceleft and getinstanceleftright (in the module Deductionsystem).
--- equalize t1 t2 = the 'substitution' s such that t1*s is possibly an instance of t2. The idea is to take for t1 the lefthand side of some rule r and for t2 the lefthand side of some equation on which we want to apply r. Whether t1*s is really an instance of t2 depends on the constraints in the rule where t1 occurs and the constraints in the equation where t2 occurs.
---
--- Example
--- t1 = F "f" [V 1, V 1]
--- t2 = F "f" [V 4, V 5]
--- equalize t1 t2 = [(1,v4),(1,v5)]
-equalize :: Term -> Term -> [(Varname, Term)]
-equalize t1 t2 = case t1 of
-    (V x) -> case t2 of
-        (V y) -> [(x, V y)]
-        (F f ts) -> [(x, F f ts)]
-    (F f ts) -> case t2 of
-        (V y) ->[]
-        (F g qs) -> if (f/=g || length(ts)/=length(qs)) then [] else (concatnoempties [ equalize a b | (a,b) <- (zip ts qs)])
 
 -- replaceNthElt xs i y = the list obtained obtained from xs by replacing the element occuring at position i by y. In case i<0 or or i>"last index of xs" then we return xs itself.
 -- Example
@@ -89,6 +68,9 @@ replace (F f ts) (i:p) t
 applyrule :: Rule -> Term -> Position -> Term
 applyrule r t p
     | postoterm t p /= Nothing =
-    if (equalize (leftsideR r) (Maybe.fromJust (postoterm t p))) /= [] then (replace t p a) else t
+    if equalize (leftsideR r) (Maybe.fromJust (postoterm t p)) /= []
+        then
+            replace t p a
+        else t
     | otherwise = t
         where a = appsub (Map.fromList (equalize (leftsideR r) (Maybe.fromJust (postoterm t p)))) (rightsideR r)
