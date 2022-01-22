@@ -129,7 +129,13 @@ showsimp rs es = List.nub [(e,r, Left) | e <- es, r <- rs, getinstancesleft r e 
 
 -- constraintEqImpRule e r = True <=> The constraint of rule e implies the constraint of constraint r
 constraintEqImpRule :: Equation -> Rule -> IO Bool
-constraintEqImpRule (E _ _ ce) (R _ _ cr) = uConstraintCheck (Or (N ce) cr)
+constraintEqImpRule (E e1 e2 ce) (R r1 r2 cr) =
+    if null tau
+        then
+            return False
+        else
+            uConstraintCheck (Or (N ce) (appsubC tau cr))
+    where tau = getinstanceleft (R r1 r2 cr)(E e1 e2 ce)
 
 type Proofstate = (Equations, Hypothesis)
 
