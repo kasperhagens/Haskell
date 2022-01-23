@@ -4,7 +4,7 @@
 
 -- For the moment we slightly simplify the notion of a proofstate by ignoring the complete/incomplete flag. So we consider a proofstate as a tuple (E,H) where E is a set of equations and H is a set of rules called induction hypothesis.
 -- The goal is to start with a set of equations E and, by using the interference rules, finding a deduction sequence (E,Ø) ⊢ ... ⊢ (Ø,H)
-module Data.Deductionsystem (showsimpleft) where
+module Data.Deductionsystem (showsimps) where
 import qualified Data.Map as Map
 import Data.Terms (
     Term(..),
@@ -133,12 +133,12 @@ constraintEqImpRule (E e1 e2 ce) (R r1 r2 cr) =
 -- eqs : {sum1(v1)≈sum2(v1) [True], sum1(v1)≈sum3(v1) [True]}
 -- rs : {sum1(v2) -> return(0) [v2 <= 0],  sum2(v2) -> u(v2,0,0) [TT]}
 --
--- e1 = E (F "sum1" [V 1]) (F "sum2" [V 1]) (B TT)
--- e2 = E (F "sum1" [V 1]) (F "sum3" [V 1]) (B TT)
--- eqs = [e1, e2]
--- r1 = R (F "sum1" [V 2]) (F "return" [F "0" []]) (B (V 2 `Le` F "0" []))
--- r2 = R (F "sum2"[V 2]) (F "u" [V 2, F "0" [], F "0" []]) (B TT)
--- rs = [r1, r2]
+-- e0 = E (F "sum1" [V 1]) (F "sum2" [V 1]) (B TT)
+-- e1 = E (F "sum1" [V 1]) (F "sum3" [V 1]) (B TT)
+-- eqs = [e0, e1]
+-- r0 = R (F "sum1" [V 2]) (F "return" [F "0" []]) (B (V 2 `Le` F "0" []))
+-- r1 = R (F "sum2"[V 2]) (F "u" [V 2, F "0" [], F "0" []]) (B TT)
+-- rs = [r0, r1]
 -- showsimp rs eqs =
 -- [
 -- (sum1(v1)~sum2(v1) [True],sum1(v2)->return(0) [v2<=0],Left) ,
@@ -177,6 +177,14 @@ showsimpsleft rs eqs = do
 showsimpsright :: Rules -> Equations -> IO [(Equation, Rule)]
 showsimpsright rs eqs = showsimpsleft rs eqsrev
                         where eqsrev = map reverseEQ eqs
+
+showsimps :: Rules -> Equations -> IO [(Equation, Rule, Side)]
+showsimps rs eqs = do
+    a <- showsimpsleft rs eqs
+    b <- showsimpsright rs eqs
+    let x = [(e, r, Left) | (e,r) <- a]
+        y = [(e, r, Right) | (e,r) <- b]
+    return (x ++ y)
 
 -- A proofstate as a tuple (E,H) where E is a set of equations and H is a set of induction hypothesis.
 type Proofstate = (Equations, Hypothesis)
