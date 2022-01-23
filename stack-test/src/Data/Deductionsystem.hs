@@ -117,18 +117,7 @@ constraintEqImpRule (E e1 e2 ce) (R r1 r2 cr) =
             uConstraintCheck (Or (N ce) (appsubC tau cr))
     where tau = getinstanceleft (R r1 r2 cr) (E e1 e2 ce)
 
--- !!CAUTION!! If we want to implement a SIMPLIFICATION-step on an equation
--- e : f(x1,...,xn) ≈  f'(a1,...,am)  [Ce]
--- with a rule
--- r : g(y1,...,yi) -> g'(b1,...,bj)  [Cr]
--- and a substitution tau such that
--- g(y1,...,yi)*tau ~ f(x1,...,xn)
--- then before we can really do the SIMPLIFICATION we have to make sure that
--- Ce -> Cr*tau holds universally.
--- We need to check this with a SAT-solver
--- For the moment we are ignoring this condition (since it requires the connection between haskell and a SAT-solver) but eventually we have to fix this.
-
--- showsimp rs es = [(e,r,s) | e <- es, r <- rs such that we can (possibly) do SIMPLIFICATION with r on side s of equation e]
+-- showsimps rs es = [(e,r,s) | e <- es, r <- rs such that we can do SIMPLIFICATION with r on side s of equation e]
 -- Example
 -- eqs : {sum1(v1)≈sum2(v1) [True], sum1(v1)≈sum3(v1) [True]}
 -- rs : {sum1(v2) -> return(0) [v2 <= 0],  sum2(v2) -> u(v2,0,0) [TT]}
@@ -140,12 +129,7 @@ constraintEqImpRule (E e1 e2 ce) (R r1 r2 cr) =
 -- r1 = R (F "sum2"[V 2]) (F "u" [V 2, F "0" [], F "0" []]) (B TT)
 -- rs = [r0, r1]
 -- showsimp rs eqs =
--- [
--- (sum1(v1)~sum2(v1) [True],sum1(v2)->return(0) [v2<=0],Left) ,
--- (sum1(v1)~sum3(v1) [True],sum1(v2)->return(0) [v2<=0],Left) ,
--- (sum1(v1)~sum2(v1) [True],sum2(v2)->u(v2,0,0) [True],Right)
--- ]
--- Note that the first two options in this list are non-valid SIMPLIFICATION posibilities. As said: we really have to filter out the valid ones by comparing the constraints with a SAT-solver.
+-- [(sum1(v1)~sum2(v1) [True],sum2(v2)->u(v2,0,0) [True],Right)]
 showsimpleft :: Rule -> Equations -> IO [(Equation, Rule)]
 showsimpleft r es = do
     if null es
@@ -240,3 +224,6 @@ simplification n s p r (eqs, hs) =
                                             c = constraintEQ (eqs !! n)
                         else
                             return (eqs, hs)
+
+-- EXPANSION
+-- expansion n s p r (eqs, hs) = the proofstate obtained by applying EXPANSION on position p on side s of the nth equation (counting starts at 0) in eqs with rule r.
