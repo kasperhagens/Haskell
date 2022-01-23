@@ -4,7 +4,7 @@
 
 -- For the moment we slightly simplify the notion of a proofstate by ignoring the complete/incomplete flag. So we consider a proofstate as a tuple (E,H) where E is a set of equations and H is a set of rules called induction hypothesis.
 -- The goal is to start with a set of equations E and, by using the interference rules, finding a deduction sequence (E,Ø) ⊢ ... ⊢ (Ø,H)
-module Data.Deductionsystem where
+module Data.Deductionsystem (showsimpleft) where
 import qualified Data.Map as Map
 import Data.Terms (
     Term(..),
@@ -72,7 +72,7 @@ getinstanceleftright :: Rule -> Equation -> Substitution
 getinstanceleftright r e = Map.fromList (concatnoempties [equalize (leftsideR r) (leftsideEQ e), equalize (rightsideR r) (rightsideEQ e)])
 
 -- If r is a rule then
--- getinstancesleft r e = [(s, t) | t is a subterm of the lefthand side of equation e such that the rule r*s is applicable to t]
+-- getinstancesleft r e = [(tau, t) | t is a subterm of the lefthand side of equation e such that the rule r*tau may be applicable to t]
 -- Example
 -- r : f(v1) -> v1      [TT]
 -- e : f(f(v1)) ≈ g(v1) [TT]
@@ -107,7 +107,7 @@ type Equations = [Equation]
 -- r6 = R (F "u" [V 1, V 2, V 3]) (F "return" [V 3]) (N (B (V 2 `Le` V 1)))
 -- sum2 = [r4, r5, r6]
 data Side = Left | Right deriving (Eq, Show)
--- constraintEqImpRule e r = True <=> The constraint of rule e implies the constraint of constraint r
+-- constraintEqImpRule e r = True <=> The constraint of equation e implies the constraint of (an instance of) constraint of rule r
 constraintEqImpRule :: Equation -> Rule -> IO Bool
 constraintEqImpRule (E e1 e2 ce) (R r1 r2 cr) =
     if null tau
@@ -123,8 +123,8 @@ constraintEqImpRule (E e1 e2 ce) (R r1 r2 cr) =
 -- r : g(y1,...,yi) -> g'(b1,...,bj)  [Cr]
 -- and a substitution tau such that
 -- g(y1,...,yi)*tau ~ f(x1,...,xn)
--- Then before we can really do the SIMPLIFICATION we have to make sure that
--- Ce -> Cr*tau holds for all assignments of the variables x1,...,xn,a1,...,am
+-- then before we can really do the SIMPLIFICATION we have to make sure that
+-- Ce -> Cr*tau holds universally.
 -- We need to check this with a SAT-solver
 -- For the moment we are ignoring this condition (since it requires the connection between haskell and a SAT-solver) but eventually we have to fix this.
 
@@ -146,8 +146,37 @@ constraintEqImpRule (E e1 e2 ce) (R r1 r2 cr) =
 -- (sum1(v1)~sum2(v1) [True],sum2(v2)->u(v2,0,0) [True],Right)
 -- ]
 -- Note that the first two options in this list are non-valid SIMPLIFICATION posibilities. As said: we really have to filter out the valid ones by comparing the constraints with a SAT-solver.
-showsimp :: Rules -> Equations -> [(Equation, Rule, Side)]
-showsimp rs es = List.nub [(e,r, Left) | e <- es, r <- rs, getinstancesleft r e /= [] ] ++ [(e,r, Right) | e <- es, r <- rs, getinstancesleft r (reverseEQ e) /= []]
+showsimpleft :: Rule -> Equations -> IO [(Equation, Rule)]
+showsimpleft r es = do
+    if null es
+        then
+            return []
+        else
+            if not (null (getinstancesleft r (head es)))
+                then do
+                    check <- constraintEqImpRule (head es) r
+                    if check
+                        then do
+                            x <- showsimpleft r (tail es)
+                            return ((head es, r) : x)
+                        else
+                            showsimpleft r (tail es)
+                else
+                    showsimpleft r (tail es)
+
+showsimpsleft :: Rules -> Equations -> IO [(Equation, Rule)]
+showsimpsleft rs eqs = do
+    if null rs
+        then
+            return []
+        else do
+            x <- showsimpleft (head rs) eqs
+            y <- showsimpsleft (tail rs) eqs
+            return (x ++ y)
+
+showsimpsright :: Rules -> Equations -> IO [(Equation, Rule)]
+showsimpsright rs eqs = showsimpsleft rs eqsrev
+                        where eqsrev = map reverseEQ eqs
 
 -- A proofstate as a tuple (E,H) where E is a set of equations and H is a set of induction hypothesis.
 type Proofstate = (Equations, Hypothesis)
