@@ -9,7 +9,8 @@ import Data.Zz
 import Data.Char
 import Data.Deductionsystem (
     Proofstate,
-    Side,
+    Side (..),
+    Rules,
     showsimps,
     simplification)
 
@@ -19,26 +20,60 @@ getInteger message =
         x <- getLine
         if all isDigit x
             then
-                return (read x :: Int)
+                if (read x >= 0)
+                    then
+                        return (read x :: Int)
+                    else
+                        getInteger "Enter a valid integer"
             else
-                 do
-                    getInteger "Enter a valid integer"
+                getInteger "Enter a valid integer"
 
+getLeftRight :: String -> IO Bool
+getLeftRight message =
+    do  putStrLn message -- show a message like "Wchich side?"
+        x <- getLine
+        if (x == "Left" || x == "left")
+            then
+                --let l = (Left :: Side)
+                --return l
+                return True
+            else
+                if (x == "Right" || x == "right")
+                    then
+                        -- let r = (Right :: Side)
+                        -- return r
+                        return False
+                    else
+                        getLeftRight "Left or Right?"
 
-doSimplification :: Int -> Side -> Position -> Rule -> Proofstate -> IO Proofstate
-doSimplification n s p r pfst = do
+-- !!WARNING!! The function getPosition will not do a safety check to deterine whether p is really a position (we could implement this later).
+getPosition :: String -> IO Position
+getPosition message =
+    do  putStrLn message
+        p <- getLine
+        return (read p :: Position)
+
+doSimplification :: Rules -> Proofstate -> IO Proofstate
+doSimplification rs (eqs, hs) = do
     putStrLn "Current proofstate:"
-    print pfst
-    putStrLn "Which equation to simplify? Counting starts at 0."
-    n <- getLine
-    putStrLn "On which side of the equation to simplify: Left or Right?"
-    s <- getLine
-    putStrLn "Enter the position of the subterm to simplify"
-    p <- getLine
-    putStrLn "Which rule to use? Counting starts at 0."
-    r <- getLine
-    return ([],[])
+    putStrLn ("E = " ++ show eqs)
+    putStrLn ("H = " ++ show hs)
+    n <- getInteger "Which equation to simplify? Counting starts at 0."
+    b <- getLeftRight "On which side of the equation to simplify: Left or Right?"
+    let s = if b then Data.Deductionsystem.Left else Data.Deductionsystem.Right
+    p <- getPosition "Enter the position of the subterm to simplify"
+    putStrLn "These are the possibly rules"
+    print rs
+    m <- getInteger "Which rule to use? Counting starts at 0."
+    y <- simplification n s p (rs!!m) (eqs, hs)
+    doSimplification rs y
+
+rs = [R (F "f" [V 0]) (F "f" [F "f" [V 0]]) (B TT)]
+eqs = [E (F "f" [V 0]) (F "g" [V 0]) (B TT)]
+pfst = (eqs, [])
 
 main :: IO ()
 main = do
-    print 4
+    x <- doSimplification rs pfst
+    print x
+

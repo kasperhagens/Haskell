@@ -6,7 +6,8 @@
 -- The goal is to start with a set of equations E and, by using the interference rules, finding a deduction sequence (E,Ø) ⊢ ... ⊢ (Ø,H)
 module Data.Deductionsystem (
     Proofstate,
-    Side,
+    Side (..),
+    Rules,
     showsimps,
     simplification
     ) where
