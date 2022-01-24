@@ -4,7 +4,12 @@
 
 -- For the moment we slightly simplify the notion of a proofstate by ignoring the complete/incomplete flag. So we consider a proofstate as a tuple (E,H) where E is a set of equations and H is a set of rules called induction hypothesis.
 -- The goal is to start with a set of equations E and, by using the interference rules, finding a deduction sequence (E,Ø) ⊢ ... ⊢ (Ø,H)
-module Data.Deductionsystem (showsimps) where
+module Data.Deductionsystem (
+    Proofstate,
+    Side,
+    showsimps,
+    simplification
+    ) where
 import qualified Data.Map as Map
 import Data.Terms (
     Term(..),
