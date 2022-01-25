@@ -19,6 +19,7 @@ import Data.Terms (
     Varname,
     Substitution,
     Position,
+    postoterm,
     appsub,
     equalize,
     subterms,
@@ -245,6 +246,7 @@ simplification n s p r (eqs, hs) =
 expansionSingleRule :: Int -> Side -> Position -> Rule -> Proofstate -> IO Proofstate
 expansionSingleRule n s p (R l r psi) (eqs, hs) = do
     let E s t phi = eqs !! n
+        u = postoterm (equationSide (E s t phi) s) p
     checkconstraint <- constraintEqImpRule (E s t phi) (R l r psi)
     if checkconstraint
         then
