@@ -245,9 +245,9 @@ simplification n s p r (eqs, hs) =
 
 expansionSingleRule :: Int -> Side -> Position -> Rule -> Proofstate -> IO Proofstate
 expansionSingleRule n s p (R l r psi) (eqs, hs) = do
-    let E s t phi = eqs !! n
-        u = postoterm (equationSide (E s t phi) s) p
-    checkconstraint <- constraintEqImpRule (E s t phi) (R l r psi)
+    let E a b phi = eqs !! n
+        u = postoterm (equationSide (E a b phi) s) p
+    checkconstraint <- constraintEqImpRule (E a b phi) (R l r psi)
     if checkconstraint
         then
             return (eqs, hs) -- if checkconstraint holds then we do not need to expand on this rule (since we can do a simplification step).
