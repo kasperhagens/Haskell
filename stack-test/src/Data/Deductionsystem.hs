@@ -247,12 +247,16 @@ expansionSingleRule :: Int -> Side -> Position -> Rule -> Proofstate -> IO Proof
 expansionSingleRule n s p (R l r psi) (eqs, hs) = do
     let E a b phi = eqs !! n
         u = postoterm (equationSide (E a b phi) s) p
-    checkconstraint <- constraintEqImpRule (E a b phi) (R l r psi)
-    if checkconstraint
+    if (u == Nothing)
         then
-            return (eqs, hs) -- if checkconstraint holds then we do not need to expand on this rule (since we can do a simplification step).
+            return (eqs, hs)
         else do
+             checkconstraint <- constraintEqImpRule (E a b phi) (R l r psi)
+            if checkconstraint
+                then
+                    return (eqs, hs) -- if checkconstraint holds then we do not need to expand on this rule (since we can do a simplification step).
+                else
             -- t <- postoterm
             -- let gamma = getinstanceleft (R l r psi) (E s t phi)
             --    e = E s t (appsubC gamma (And ))
-            return ([],[])
+                    return ([],[])
