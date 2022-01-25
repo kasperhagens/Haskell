@@ -7,6 +7,7 @@ import Data.Equations
 import Data.Constraints
 import Data.Zz
 import Data.Char
+import Data.Maybe
 import Data.Deductionsystem (
     Proofstate,
     Side (..),
@@ -66,37 +67,43 @@ repeatSimplification rs (eqs, hs) = do
     putStrLn ("E = " ++ show eqs)
     putStrLn ("H = " ++ show hs)
     n <- getInteger "Which equation to simplify? Counting starts at 0."
-    putStrLn ("You have chosen" ++ show (eqs !! n))
+    putStrLn ("You have chosen equation " ++ show (eqs !! n))
     s <- getLeftRight "On which side of this equation to simplify: Left or Right?"
     p <- getPosition (
-        "Enter the position of the subterm of"
+        "Enter the position of the subterm of "
         ++
         show (equationSide (eqs !! n) s)
         ++
         " to simplify"
         )
-    let t = postoterm (equationSide (eqs !! n) s) p
-    if null hs
+    let u = postoterm (equationSide (eqs !! n) s) p
+    if (u == Nothing)
         then do
-            putStrLn "These are the rules"
-            print rs
-            m <- getInteger "Which rule to use in the simplification? Counting starts at 0."
-            y <- simplification n s p (rs!!m) (eqs, hs)
-            repeatSimplification rs y
+            putStrLn "Invalid position, start again."
+            repeatSimplification rs (eqs, hs)
         else do
-            putStrLn "These are the rules"
-            putStrLn ("R = " ++ show rs)
-            putStrLn ("H = " ++ show hs)
-            l <- getrule "Using R or H?"
-            if l == "rs"
+            let t = fromJust u
+            if null hs
                 then do
-                    m <- getInteger "Which rule from R to use in the simplification? Counting starts at 0."
+                    putStrLn "These are the rules"
+                    print rs
+                    m <- getInteger ("Which rule to use to simplify " ++ show t ++"? Counting starts at 0.")
                     y <- simplification n s p (rs!!m) (eqs, hs)
                     repeatSimplification rs y
                 else do
-                    m <- getInteger "Which rule from H to use in the simplification? Counting starts at 0."
-                    y <- simplification n s p (hs!!m) (eqs, hs)
-                    repeatSimplification rs y
+                    putStrLn "These are the rules"
+                    putStrLn ("R = " ++ show rs)
+                    putStrLn ("H = " ++ show hs)
+                    l <- getrule ("Using R or H to simplify " ++ (show t) ++ "?")
+                    if l == "rs"
+                        then do
+                            m <- getInteger "Which rule from R to use in the simplification? Counting starts at 0."
+                            y <- simplification n s p (rs!!m) (eqs, hs)
+                            repeatSimplification rs y
+                        else do
+                            m <- getInteger "Which rule from H to use in the simplification? Counting starts at 0."
+                            y <- simplification n s p (hs!!m) (eqs, hs)
+                            repeatSimplification rs y
 
 rs = [R (F "f" [V 0]) (F "f" [F "f" [V 0]]) (B TT)]
 eqs = [E (F "f" [V 0]) (F "g" [V 0]) (B TT)]
