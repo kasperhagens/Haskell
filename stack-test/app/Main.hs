@@ -18,55 +18,46 @@ getInteger :: String -> IO Int
 getInteger message =
     do  putStrLn message -- show a message like "Enter an integer"
         x <- getLine
-        if all isDigit x
+        if all isDigit x && (read x >= 0)
             then
-                if (read x >= 0)
-                    then
-                        return (read x :: Int)
-                    else
-                        getInteger "Enter a valid integer"
+                return (read x :: Int)
             else
                 getInteger "Enter a valid integer"
 
-getLeftRight :: String -> IO Bool
+getLeftRight :: String -> IO Side
 getLeftRight message =
     do  putStrLn message -- show a message like "Wchich side?"
         x <- getLine
-        if (x == "Left" || x == "left")
+        if x == "Left" || x == "left"
             then
-                --let l = (Left :: Side)
-                --return l
-                return True
+                return Data.Deductionsystem.Left
             else
-                if (x == "Right" || x == "right")
+                if x == "Right" || x == "right"
                     then
-                        -- let r = (Right :: Side)
-                        -- return r
-                        return False
+                        return Data.Deductionsystem.Right
                     else
                         getLeftRight "Left or Right?"
 
--- !!WARNING!! The function getPosition will not do a safety check to deterine whether p is really a position (we could implement this later).
+-- !!WARNING!! The function getPosition will not do a safety check to deterine whether p is really a position (we could implement this later). If we enter an invalid position then it will crash.
 getPosition :: String -> IO Position
 getPosition message =
     do  putStrLn message
         p <- getLine
         return (read p :: Position)
 
-doSimplification :: Rules -> Proofstate -> IO Proofstate
-doSimplification rs (eqs, hs) = do
+repeatSimplification :: Rules -> Proofstate -> IO Proofstate
+repeatSimplification rs (eqs, hs) = do
     putStrLn "Current proofstate:"
     putStrLn ("E = " ++ show eqs)
     putStrLn ("H = " ++ show hs)
     n <- getInteger "Which equation to simplify? Counting starts at 0."
-    b <- getLeftRight "On which side of the equation to simplify: Left or Right?"
-    let s = if b then Data.Deductionsystem.Left else Data.Deductionsystem.Right
+    s <- getLeftRight "On which side of this equation to simplify: Left or Right?"
     p <- getPosition "Enter the position of the subterm to simplify"
-    putStrLn "These are the possibly rules"
+    putStrLn "These are the rules"
     print rs
-    m <- getInteger "Which rule to use? Counting starts at 0."
+    m <- getInteger "Which rule to use in the simplification? Counting starts at 0."
     y <- simplification n s p (rs!!m) (eqs, hs)
-    doSimplification rs y
+    repeatSimplification rs y
 
 rs = [R (F "f" [V 0]) (F "f" [F "f" [V 0]]) (B TT)]
 eqs = [E (F "f" [V 0]) (F "g" [V 0]) (B TT)]
@@ -74,6 +65,5 @@ pfst = (eqs, [])
 
 main :: IO ()
 main = do
-    x <- doSimplification rs pfst
+    x <- repeatSimplification rs pfst
     print x
-
