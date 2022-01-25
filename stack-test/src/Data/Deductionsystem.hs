@@ -8,8 +8,10 @@ module Data.Deductionsystem (
     Proofstate,
     Side (..),
     Rules,
+    Hypothesis,
     showsimps,
-    simplification
+    simplification,
+    equationSide
     ) where
 import qualified Data.Map as Map
 import Data.Terms (
@@ -113,6 +115,11 @@ type Equations = [Equation]
 -- r6 = R (F "u" [V 1, V 2, V 3]) (F "return" [V 3]) (N (B (V 2 `Le` V 1)))
 -- sum2 = [r4, r5, r6]
 data Side = Left | Right deriving (Eq, Show)
+
+equationSide :: Equation -> Side -> Term
+equationSide (E t1 t2 c) Left = t1
+equationSide (E t1 t2 c) Right = t2
+
 -- constraintEqImpRule e r = True <=> The constraint of equation e implies the constraint of (an instance of) constraint of rule r
 constraintEqImpRule :: Equation -> Rule -> IO Bool
 constraintEqImpRule (E e1 e2 ce) (R r1 r2 cr) =
@@ -232,4 +239,18 @@ simplification n s p r (eqs, hs) =
                             return (eqs, hs)
 
 -- EXPANSION
--- expansion n s p r (eqs, hs) = the proofstate obtained by applying EXPANSION on position p on side s of the nth equation (counting starts at 0) in eqs with rule r.
+-- expansion
+-- expansion n s p rs (eqs, hs) = the proofstate obtained by applying EXPANSION on position p on side s of the nth equation (counting starts at 0) in eqs with respect to the rules in rs.
+
+expansionSingleRule :: Int -> Side -> Position -> Rule -> Proofstate -> IO Proofstate
+expansionSingleRule n s p (R l r psi) (eqs, hs) = do
+    let E s t phi = eqs !! n
+    checkconstraint <- constraintEqImpRule (E s t phi) (R l r psi)
+    if checkconstraint
+        then
+            return (eqs, hs) -- if checkconstraint holds then we do not need to expand on this rule (since we can do a simplification step).
+        else do
+            -- t <- postoterm
+            -- let gamma = getinstanceleft (R l r psi) (E s t phi)
+            --    e = E s t (appsubC gamma (And ))
+            return ([],[])

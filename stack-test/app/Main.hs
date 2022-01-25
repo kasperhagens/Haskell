@@ -12,7 +12,8 @@ import Data.Deductionsystem (
     Side (..),
     Rules,
     showsimps,
-    simplification)
+    simplification,
+    equationSide)
 
 getInteger :: String -> IO Int
 getInteger message =
@@ -38,6 +39,20 @@ getLeftRight message =
                     else
                         getLeftRight "Left or Right?"
 
+getrule :: String -> IO String
+getrule message =
+    do  putStrLn message -- show a message like "Wchich side?"
+        x <- getLine
+        if x == "R" || x == "r"
+            then
+                return "rs"
+            else
+                if x == "H" || x == "h"
+                    then
+                        return "hs"
+                    else
+                        getrule "R or H?"
+
 -- !!WARNING!! The function getPosition will not do a safety check to deterine whether p is really a position (we could implement this later). If we enter an invalid position then it will crash.
 getPosition :: String -> IO Position
 getPosition message =
@@ -51,17 +66,41 @@ repeatSimplification rs (eqs, hs) = do
     putStrLn ("E = " ++ show eqs)
     putStrLn ("H = " ++ show hs)
     n <- getInteger "Which equation to simplify? Counting starts at 0."
+    putStrLn ("You have chosen" ++ show (eqs !! n))
     s <- getLeftRight "On which side of this equation to simplify: Left or Right?"
-    p <- getPosition "Enter the position of the subterm to simplify"
-    putStrLn "These are the rules"
-    print rs
-    m <- getInteger "Which rule to use in the simplification? Counting starts at 0."
-    y <- simplification n s p (rs!!m) (eqs, hs)
-    repeatSimplification rs y
+    p <- getPosition (
+        "Enter the position of the subterm of"
+        ++
+        show (equationSide (eqs !! n) s)
+        ++
+        " to simplify"
+        )
+    let t = postoterm (equationSide (eqs !! n) s) p
+    if null hs
+        then do
+            putStrLn "These are the rules"
+            print rs
+            m <- getInteger "Which rule to use in the simplification? Counting starts at 0."
+            y <- simplification n s p (rs!!m) (eqs, hs)
+            repeatSimplification rs y
+        else do
+            putStrLn "These are the rules"
+            putStrLn ("R = " ++ show rs)
+            putStrLn ("H = " ++ show hs)
+            l <- getrule "Using R or H?"
+            if l == "rs"
+                then do
+                    m <- getInteger "Which rule from R to use in the simplification? Counting starts at 0."
+                    y <- simplification n s p (rs!!m) (eqs, hs)
+                    repeatSimplification rs y
+                else do
+                    m <- getInteger "Which rule from H to use in the simplification? Counting starts at 0."
+                    y <- simplification n s p (hs!!m) (eqs, hs)
+                    repeatSimplification rs y
 
 rs = [R (F "f" [V 0]) (F "f" [F "f" [V 0]]) (B TT)]
 eqs = [E (F "f" [V 0]) (F "g" [V 0]) (B TT)]
-pfst = (eqs, [])
+pfst = (eqs, rs)
 
 main :: IO ()
 main = do
