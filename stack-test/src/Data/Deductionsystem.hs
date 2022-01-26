@@ -33,6 +33,8 @@ import Data.Rules (
     appsubR,
     applyrule,
     replaceNthElt)
+import Data.List (delete)
+import Data.Maybe (fromJust)
 import Data.Equations
 import Data.Zz
 import qualified Data.List as List
@@ -247,40 +249,52 @@ expansionSingleRule :: Int -> Side -> Position -> Rule -> Proofstate -> IO Proof
 expansionSingleRule n s p (R l r psi) (eqs, hs) = do
     let E a b phi = eqs !! n
         u = postoterm (equationSide (E a b phi) s) p
-    if (u == Nothing) -- If u equals Nothing then side s of equation (E a b phi) has no subterm on position p.
-        then
-            printStrLn (
-                show (equationSide (E a b phi) s)
-                ++
-                " has no subterm on position "
-                ++
-                (show p)
-                ++ ". Proofstate has not been changed."
+    if u == Nothing -- If u equals Nothing then side s of equation (E a b phi) has no subterm on position p.
+        then do
+            putStrLn (
+                    show (equationSide (E a b phi) s)
+                    ++
+                    " has no subterm on position "
+                    ++
+                    (show p)
+                    ++
+                    ". Proofstate has not been changed."
                 )
             return (eqs, hs)
         else do
-            let tau = Map.fromList.(equalize l (fromJust u)) -- If tau is empty then we cannot apply the rule to the subterm on position p.
+            let tau = Map.fromList (equalize l (fromJust u)) -- If tau is empty then we cannot apply the rule to the subterm on position p.
             if null tau
-                then
-                    printStrLn (
-                    " No expansion possible on "
-                    ++
-                    (show u)
-                    ++
-                    ". Proofstate has not been changed."
-                    )
+                then do
+                    putStrLn ("No expansion possible on "
+                        ++
+                        show u
+                        ++
+                        ". Proofstate has not been changed."
+                        )
                     return (eqs, hs)
                 else do
                     checkconstraint <- uConstraintCheck (Or (N phi) (appsubC tau psi))
                     if checkconstraint
-                        then
+                        then do
                             putStrLn "You can do simplification"
                             return (eqs, hs) -- if checkconstraint holds then we do not need to expand on this rule (since we can do a simplification step).
-                    else do
-                        let adjustconstraint = And phi (appsubC tau psi)
-                            adjustequation = E a b adjustconstraint
-                        checkadjustconstraint <- uConstraintCheck (Or (N adjustconstraint) (appsubC tau psi))
+                        else do
+                            let adjustconstraint = And phi (appsubC tau psi)
+                                adjustequation = E a b adjustconstraint
+                            checkadjustconstraint <- uConstraintCheck (Or (N adjustconstraint) (appsubC tau psi))
                         -- This check is really necessary: it can happen that the constraint phi is contradictory to tau*psi.
-                        if checkadjustconstraint
-                            then do
-                                (adjusteqs, adjsths) <- simplification n s p r (eqs, hs)
+                            if checkadjustconstraint
+                                then do
+                                    let newequationleft = E (applyrule (R l r psi) a  p) b adjustconstraint
+                                        newequationright = E a ((applyrule (R l r psi) b p)) adjustconstraint
+                                    if s==Left
+                                        then do
+                                            let neweqs = newequationleft:(delete (E a b phi) eqs)
+                                                newhs = (R a b phi):hs
+                                            return (neweqs, newhs)
+                                        else do
+                                            let neweqs = newequationright:(delete (E a b phi) eqs)
+                                                newhs = (R a b phi):hs
+                                            return (neweqs, newhs)
+                                else
+                                    return (eqs,hs)
