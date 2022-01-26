@@ -247,16 +247,40 @@ expansionSingleRule :: Int -> Side -> Position -> Rule -> Proofstate -> IO Proof
 expansionSingleRule n s p (R l r psi) (eqs, hs) = do
     let E a b phi = eqs !! n
         u = postoterm (equationSide (E a b phi) s) p
-    if (u == Nothing)
+    if (u == Nothing) -- If u equals Nothing then side s of equation (E a b phi) has no subterm on position p.
         then
+            printStrLn (
+                show (equationSide (E a b phi) s)
+                ++
+                " has no subterm on position "
+                ++
+                (show p)
+                ++ ". Proofstate has not been changed."
+                )
             return (eqs, hs)
         else do
-             checkconstraint <- constraintEqImpRule (E a b phi) (R l r psi)
-            if checkconstraint
+            let tau = Map.fromList.(equalize l (fromJust u)) -- If tau is empty then we cannot apply the rule to the subterm on position p.
+            if null tau
                 then
-                    return (eqs, hs) -- if checkconstraint holds then we do not need to expand on this rule (since we can do a simplification step).
-                else
-            -- t <- postoterm
-            -- let gamma = getinstanceleft (R l r psi) (E s t phi)
-            --    e = E s t (appsubC gamma (And ))
-                    return ([],[])
+                    printStrLn (
+                    " No expansion possible on "
+                    ++
+                    (show u)
+                    ++
+                    ". Proofstate has not been changed."
+                    )
+                    return (eqs, hs)
+                else do
+                    checkconstraint <- uConstraintCheck (Or (N phi) (appsubC tau psi))
+                    if checkconstraint
+                        then
+                            putStrLn "You can do simplification"
+                            return (eqs, hs) -- if checkconstraint holds then we do not need to expand on this rule (since we can do a simplification step).
+                    else do
+                        let adjustconstraint = And phi (appsubC tau psi)
+                            adjustequation = E a b adjustconstraint
+                        checkadjustconstraint <- uConstraintCheck (Or (N adjustconstraint) (appsubC tau psi))
+                        -- This check is really necessary: it can happen that the constraint phi is contradictory to tau*psi.
+                        if checkadjustconstraint
+                            then do
+                                (adjusteqs, adjsths) <- simplification n s p r (eqs, hs)
