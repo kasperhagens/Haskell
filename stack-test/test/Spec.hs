@@ -13,7 +13,7 @@ import Data.Deductionsystem (
     expansionSingleRule)
 n=0
 s = Data.Deductionsystem.Left
-p = [0]
+p = [] :: Position
 r = R (F "f" [V 2, V 3]) (V 2) (B (V 2 `Ge` V 3))
 eqs = [E (F "f" [F "g" [V 0], V 1]) (F "g" [V 0]) (B TT)]
 hs = []
@@ -30,8 +30,12 @@ main = do
                 ++
                 "-side of equation ")
     putStrLn (show (eqs !! n))
-    putStrLn ("on position " ++ show p ++
-                " with proofstate ")
+    putStrLn ("on position "
+                ++
+                show p
+                ++
+                " with proofstate "
+                )
     putStrLn (show pfst)
     putStrLn " yields "
     putStrLn (show exp)
