@@ -11,7 +11,8 @@ module Data.Deductionsystem (
     Hypothesis,
     showsimps,
     simplification,
-    equationSide
+    equationSide,
+    expansionSingleRule
     ) where
 import qualified Data.Map as Map
 import Data.Terms (
@@ -286,7 +287,7 @@ expansionSingleRule n s p (R l r psi) (eqs, hs) = do
                             if checkadjustconstraint
                                 then do
                                     let newequationleft = E (applyrule (R l r psi) a  p) b adjustconstraint
-                                        newequationright = E a ((applyrule (R l r psi) b p)) adjustconstraint
+                                        newequationright = E a (applyrule (R l r psi) b p) adjustconstraint
                                     if s==Left
                                         then do
                                             let neweqs = newequationleft:(delete (E a b phi) eqs)

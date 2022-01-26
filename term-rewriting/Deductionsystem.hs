@@ -6,7 +6,7 @@
 -- The goal is to start with a set of equations E and, by using the interference rules, finding a deduction sequence (E,Ø) ⊢ ... ⊢ (Ø,H)
 module Deductionsystem where
 import qualified Data.Map as Map
-import Terms (Term(..), Varname, Substitution, Position, appsub, subterms, mgu)
+import Terms (Term(..), Varname, Substitution, Position, appsub, subterms, mgu, postoterm)
 import Rules (Basicformula(..), Constraint(..), Rule (..), leftsideR, rightsideR, appsubC, appsubR, equalize, concatnoempties, applyrule, replaceNthElt)
 import Equations
 import qualified Data.List as List
@@ -120,6 +120,12 @@ type Equations = [Equation]
 -- ]
 -- Note that the first two options in this list are non-valid SIMPLIFICATION posibilities. As said: we really have to filter out the valid ones by comparing the constraints with a SAT-solver.
 data Side = Left | Right deriving (Eq, Show)
+
+equationSide :: Equation -> Side -> Term
+equationSide (E t1 t2 c) Left = t1
+equationSide (E t1 t2 c) Right = t2
+
+
 showsimp :: Rules -> Equations -> [(Equation, Rule, Side)]
 showsimp rs es = List.nub [(e,r, Left) | e <- es, r <- rs, getinstancesleft r e /= [] ] ++ [(e,r, Right) | e <- es, r <- rs, getinstancesleft r (reverseEQ e) /= []]
 
