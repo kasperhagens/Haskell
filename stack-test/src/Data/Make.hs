@@ -1,5 +1,3 @@
--- For the moment we only allow constraints with functionsymbols +, - and *
--- Any use of another functionsymbol will yield false.
 module Data.Make where
 import Z3.Monad
 import Data.Constraints
@@ -41,12 +39,7 @@ makeTerm (F f l) = do
                                 -- type [AST]. The function sequence does that for us.
                                 fsymb <- mkFuncDecl fname argsort outsort
                                 mkApp fsymb t
--- fsymb :: Symbol
--- int :: Sort
--- argsorts :: [Sort]
 
--- We only allow terms with functionsymbols +, - and *
--- makeTerm t = mkFalse
 
 
 makeBasicformula :: Basicformula -> Z3 AST
