@@ -58,7 +58,7 @@ main = do
                 " with proofstate "
                 )
     putStrLn (show pfst)
-    putStrLn " yields the proofstate"
+    putStrLn "yields the proofstate"
     putStrLn (show exp)
 
 
