@@ -9,10 +9,12 @@ import Data.Deductionsystem (
     Proofstate,
     Side (..),
     Hypothesis,
+    Rules,
     equationSide,
     showsimps,
     simplification,
-    expansionSingleRule)
+    expansionSingleRule,
+    expansion)
 import qualified Data.Map as Map
 import Data.Maybe
 
@@ -20,6 +22,7 @@ n=0
 s = Data.Deductionsystem.Left :: Side
 p = [] :: Position
 r = R (F "f" [V 2, V 3]) (V 2) (B (V 2 `Ge` V 3)) :: Rule
+rs = [r] :: Rules
 psi = constraintR r :: Constraint
 l = leftsideR r :: Term
 eqs = [E (F "f" [F "g" [V 0], V 1]) (F "g" [V 0]) (B TT)]
@@ -42,7 +45,7 @@ main = do
 --        " is "
 --        ++
 --        show checkconstraint)
-    exp <- expansionSingleRule n s p r pfst
+    exp <- expansion n s p rs pfst
     putStrLn " "
     putStrLn " "
     putStrLn ("EXPANSION on the "

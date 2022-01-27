@@ -12,7 +12,8 @@ module Data.Deductionsystem (
     showsimps,
     simplification,
     equationSide,
-    expansionSingleRule
+    expansionSingleRule,
+    expansion
     ) where
 import qualified Data.Map as Map
 import Data.Terms (
@@ -299,3 +300,25 @@ expansionSingleRule n s p (R l r psi) (eqs, hs) = do
                                             return (neweqs, newhs)
                                 else
                                     return (eqs,hs)
+expansion :: Int -> Side -> Position -> Rules -> Proofstate -> IO Proofstate
+expansion n s p rs (eqs, hs) = do
+    if null rs
+        then
+            return (eqs, hs)
+        else do
+            (x,y) <- expansionSingleRule n s p (head rs) (eqs, hs)
+            if (x,y) == (eqs, hs)
+                then
+                    expansion n s p (tail rs) (eqs, hs)
+                else
+                    if (null (tail rs)) --If rs contains only one rule then we return the same as expansionSingleRule
+                        then
+                             return (x,y)
+                        else do
+                            (remeqs, remhyps) <- expansion n s p (tail rs) (eqs, hs)
+                            let neweq = head x
+                                newhyp = head y
+                                neweqs = neweq : remeqs
+                                newhs = newhyp : remhyps
+                                newpfst = (neweqs, newhs)
+                            return newpfst
