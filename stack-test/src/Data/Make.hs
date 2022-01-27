@@ -28,8 +28,26 @@ makeTerm (F "-" [t1,t2]) = do
                                 b <- makeTerm t2
                                 mkSub [a,b]
 
+makeTerm (F f l) = do
+                                fname <- mkStringSymbol f
+                                int <- mkIntSort
+                                let arity = length l
+                                    argsort = replicate arity int
+                                    outsort = int
+                                t <- sequence [makeTerm q | q <- l]
+                                -- Note that makeTerm q :: Z3 AST
+                                -- collecting those terms in a list gives us something
+                                -- of the type [Z3 AST], but we need something of the
+                                -- type [AST]. The function sequence does that for us.
+                                fsymb <- mkFuncDecl fname argsort outsort
+                                mkApp fsymb t
+-- fsymb :: Symbol
+-- int :: Sort
+-- argsorts :: [Sort]
+
 -- We only allow terms with functionsymbols +, - and *
-makeTerm t = mkFalse
+-- makeTerm t = mkFalse
+
 
 makeBasicformula :: Basicformula -> Z3 AST
 makeBasicformula TT = mkTrue

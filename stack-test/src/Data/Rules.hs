@@ -26,6 +26,9 @@ leftsideR (R t1 t2 c) = t1
 rightsideR :: Rule -> Term
 rightsideR (R t1 t2 c) = t2
 
+constraintR :: Rule -> Constraint
+constraintR (R t1 t2 c) = c
+
 -- replaceNthElt is a helper function used to define replace.
 -- replaceNthElt xs i y = the list obtained obtained from xs by replacing the element occuring at position i by y. In case i<0 or or i>"last index of xs" we output xs itself.
 -- Example
