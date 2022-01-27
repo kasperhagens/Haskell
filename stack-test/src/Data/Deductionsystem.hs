@@ -35,7 +35,7 @@ import Data.Rules (
     appsubR,
     applyrule,
     replaceNthElt)
-import Data.List (delete)
+import Data.List (delete, nub)
 import Data.Maybe (fromJust)
 import Data.Equations
 import Data.Zz
@@ -267,7 +267,9 @@ expansionSingleRule n s p (R l r psi) (eqs, hs) = do
             let tau = Map.fromList (equalize l (fromJust u)) -- If tau is empty then we cannot apply the rule to the subterm on position p.
             if null tau
                 then do
-                    putStrLn ("No expansion possible on "
+                    putStrLn ("No expansion possible with rule "
+                        ++
+                        show r
                         ++
                         show u
                         ++
@@ -278,8 +280,20 @@ expansionSingleRule n s p (R l r psi) (eqs, hs) = do
                     checkconstraint <- uConstraintCheck (Or (N phi) (appsubC tau psi))
                     if checkconstraint
                         then do
-                            putStrLn "You can do simplification"
+                            putStrLn ("You can do simplification with rule "
+                                ++
+                                show r
+                                ++
+                                " on "
+                                ++
+                                show u
+                                ++
+                                ". Proofstate has not been changed."
+                                )
                             return (eqs, hs) -- if checkconstraint holds then we do not need to expand on this rule (since we can do a simplification step).
+                            --
+                            -- !!!QUESTION!!!
+                            -- OR DO WE STILL WANT TO HAVE THE POSIBILITY TO DO THIS? I CAN CHANGE THIS IF NEEDED
                         else do
                             let adjustconstraint = And phi (appsubC tau psi)
                                 adjustequation = E a b adjustconstraint
@@ -300,6 +314,7 @@ expansionSingleRule n s p (R l r psi) (eqs, hs) = do
                                             return (neweqs, newhs)
                                 else
                                     return (eqs,hs)
+
 expansion :: Int -> Side -> Position -> Rules -> Proofstate -> IO Proofstate
 expansion n s p rs (eqs, hs) = do
     if null rs
@@ -308,7 +323,7 @@ expansion n s p rs (eqs, hs) = do
         else do
             (x,y) <- expansionSingleRule n s p (head rs) (eqs, hs)
             if (x,y) == (eqs, hs)
-                then
+                then -- in this case we cannot do expansion with rule head rs
                     expansion n s p (tail rs) (eqs, hs)
                 else
                     if (null (tail rs)) --If rs contains only one rule then we return the same as expansionSingleRule
@@ -319,6 +334,7 @@ expansion n s p rs (eqs, hs) = do
                             let neweq = head x
                                 newhyp = head y
                                 neweqs = neweq : remeqs
-                                newhs = newhyp : remhyps
+                                newhs = nub (newhyp : remhyps)
+                                -- If we don't use nub we may get multiple occurrences of a single hypothesis (one for each applicable rule).
                                 newpfst = (neweqs, newhs)
                             return newpfst
