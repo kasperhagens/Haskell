@@ -54,21 +54,21 @@ getRuleSet message =
                     else
                         getRuleSet "R or H?"
 
-getRule :: String -> [Rule] -> IO Int
-getRule message rules = do
+getRule :: String -> [Rule] -> String -> IO Int
+getRule message rules symb = do
     putStrLn message
     l <- getLine
     let lth = length rules
-        eval = (fmap (\n x -> (n,x == ("r" ++ show n) || x == show n)) [0..(lth -1)])<*> [l]
+        eval = (fmap (\n x -> (n,x == (symb ++ show n) || x == show n)) [0..(lth -1)])<*> [l]
         evaltrue = filter (\x -> snd x == True) eval
     if null evaltrue
         then
-            getRule "This rule does not exist. Enter a valid rule." rules
+            getRule "This rule does not exist. Enter a valid rule." rules symb
         else do
             let n = fst (head evaltrue)
             if (n > lth || n<0)
                 then
-                    getRule "This rule does not exist. Enter a valid rule." rules
+                    getRule "This rule does not exist. Enter a valid rule." rules symb
                 else
                     return n
 
@@ -77,7 +77,7 @@ getEq message eqs = do
     putStrLn message
     l <- getLine
     let lth = length eqs
-        eval = (fmap (\n x -> (n,x == ("r" ++ show n) || x == show n)) [0..(lth -1)])<*> [l]
+        eval = (fmap (\n x -> (n,x == ("e" ++ show n) || x == show n)) [0..(lth -1)])<*> [l]
         evaltrue = filter (\x -> snd x == True) eval
     if null evaltrue
         then
@@ -100,84 +100,85 @@ getPosition message =
 printEqs :: String -> [Equation] -> IO ()
 printEqs message eqs = do
     let l = length eqs
-        eqsindex = zipWith (++) (replicate l "e") (fmap show [0..l])
-        numberedeqs = zipWith (\x y->x ++ ": " ++ y) eqsindex (fmap show eqs)
-    putStrLn message
-    mapM_ putStrLn numberedeqs
-    putStrLn " "
+    if l==0
+        then do
+            putStrLn ("No " ++ (map toLower message))
+            putStrLn " "
+        else do
+        let eqsindex = zipWith (++) (replicate l "e") (fmap show [0..l])
+            numberedeqs = zipWith (\x y->x ++ ": " ++ y) eqsindex (fmap show eqs)
+        putStrLn message
+        mapM_ putStrLn numberedeqs
+        putStrLn " "
 
 printRules :: String -> [Rule] -> String -> IO ()
 printRules message rs symb = do
     let l = length rs
-        rsindex = zipWith (++) (replicate l symb) (fmap show [0..l])
-        numberedrs = zipWith (\x y->x ++ ": " ++ y) rsindex (fmap show rs)
-    putStrLn message
-    mapM_ putStrLn numberedrs
-    putStrLn " "
+    if l==0
+        then do
+            putStrLn ("No " ++ (map toLower message))
+            putStrLn " "
+        else do
+        let rsindex = zipWith (++) (replicate l symb) (fmap show [0..l])
+            numberedrs = zipWith (\x y->x ++ ": " ++ y) rsindex (fmap show rs)
+        putStrLn message
+        mapM_ putStrLn numberedrs
+        putStrLn " "
 
 printPfst :: Proofstate -> IO ()
 printPfst (eqs, hs) = do
     printEqs "Equations" eqs
-    printRules "Hypothisis" hs "h"
---    let l = length eqs
---        eqsindex = zipWith (++) (replicate l "e") (fmap show [0..l])
---        numberedeqs = zipWith (\x y->x ++ ": " ++ y) eqsindex (fmap show eqs)
---
---        m = length hs
---        hsindex = zipWith (++) (replicate m "h") (fmap show [0..m])
---        numberedhs = zipWith (\x y->x ++ ": " ++ y) hsindex (fmap show hs)
---    putStrLn "Equations"
---    mapM_ putStrLn numberedeqs
---    putStrLn " "
---    putStrLn "Hypothesis"
---    mapM_ putStrLn numberedhs
---    putStrLn " "
-
--- printEqs :: Equat
+    printRules "Hypothesis" hs "h"
 
 interactiveSimplification :: Rules -> Proofstate -> IO Proofstate
 interactiveSimplification rs (eqs, hs) = do
     putStrLn "Current proofstate:"
     printPfst (eqs,hs)
     n <- getEq "Which equation to simplify?" eqs
+    putStrLn (show (eqs!!n))
+    putStrLn " "
     s <- getLeftRight "On which side of this equation to simplify: Left or Right?"
+    putStrLn (show ((equationSide (eqs !! n) s)))
+    putStrLn " "
     p <- getPosition (
-        "Enter the position of the subterm of "
+        "Enter the position of the subterm"
         ++
-        show (equationSide (eqs !! n) s)
-        ++
+    --    show (equationSide (eqs !! n) s)
+    --    ++
         " to simplify"
         )
     let u = postoterm (equationSide (eqs !! n) s) p
     if (u == Nothing)
         then do
             putStrLn "Invalid position, try again."
+            putStrLn " "
             interactiveSimplification rs (eqs, hs)
         else do
             let t = fromJust u
+            putStrLn (show t)
+            putStrLn " "
             if null hs
                 then do
-                    putStrLn "These are the rules"
-                    print rs
-                    m <- getRule ("Which rule to use to simplify "
+                    printRules "Rules" rs "r"
+                    m <- getRule ("Which rule do you want to use to simplify"
                         ++
-                        show t ++"?") rs
+                        show t ++"?") rs "r"
                     y <- simplification n s p (rs!!m) (eqs, hs)
                     interactiveSimplification rs y
                 else do
-                    putStrLn "These are the rules"
-                    putStrLn ("R = " ++ show rs)
-                    putStrLn ("H = " ++ show hs)
-                    l <- getRuleSet ("Using R or H to simplify " ++ (show t) ++ "?")
+                    putStrLn "These are your choices for simplification"
+                    printRules "Rules" rs "r"
+                    printRules "Hypothesis" hs "h"
+                    l <- getRuleSet ("Using a Rule or an Hypothesis? Press R or H.")
                     if l == "rs"
                         then do
-                            m <- getInteger "Which rule from R to use in the simplification?"
+                            m <- getRule "Which rule from R to use in the simplification?" rs "r"
                             y <- simplification n s p (rs!!m) (eqs, hs)
-                            interactiveSimplification rs y
+                            return y
                         else do
-                            m <- getInteger "Which rule from H to use in the simplification?"
+                            m <- getRule "Which rule from H to use in the simplification?" hs "h"
                             y <- simplification n s p (hs!!m) (eqs, hs)
-                            interactiveSimplification rs y
+                            return y
 
 r0=R (F "f" [V 0]) (F "f" [F "f" [V 0]]) (B TT)
 rs = [r0, r0]
@@ -185,8 +186,9 @@ rs = [r0, r0]
 e = E (F "f" [V 0]) (F "g" [V 0]) (B TT)
 eqs = [e, e]
 pfst = (eqs, rs)
-hs = [R (V 0) (V 1) (B (TT))]
+hs = []
 
 main :: IO ()
 main = do
-    printPfst (eqs, hs)
+    x <- interactiveSimplification rs pfst
+    print x
