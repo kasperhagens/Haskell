@@ -34,8 +34,28 @@ pfst = (eqs, hs) :: Proofstate
 --u = postoterm (Data.Deductionsystem.equationSide (E a b phi) s) p
 --tau = Map.fromList (equalize l (fromJust u))
 
+getRule :: String -> [Rule] -> IO Int
+getRule message rules = do
+    putStrLn message
+    l <- getLine
+    let lth = length rules
+        eval = (fmap (\n x -> (n,x == ("r" ++ show n) || x == show n)) [0..(lth -1)] <*> [l]
+        if null eval
+            then
+                PutStrLn "Rule does not exist. Enter a valid rule."
+                getRule
+            else
+                n = fst (head (filter (\x -> snd x == True) eval))
+                if (n > lth || n<0)
+                    then
+                        PutStrLn "Rule does not exist. Enter a valid rule."
+                        getRule
+                    else
+                        return n
 main :: IO ()
 main = do
+    m <- getRule "Which rule to use?" rs
+    print m
 --    checkconstraint <- uConstraintCheck (Or (N phi) (appsubC tau psi))
 --    putStrLn (show phi
 --        ++
@@ -46,24 +66,25 @@ main = do
 --        " is "
 --        ++
 --        show checkconstraint)
-    exp <- expansion n s p rs pfst
-    putStrLn " "
-    putStrLn " "
-    putStrLn ("EXPANSION on the "
-                ++
-                show s
-                ++
-                "-side of equation ")
-    putStrLn (show (eqs !! n))
-    putStrLn ("on position "
-                ++
-                show p
-                ++
-                " with proofstate "
-                )
-    putStrLn (show pfst)
-    putStrLn "yields the proofstate"
-    putStrLn (show exp)
+--
+--    exp <- expansion n s p rs pfst
+--    putStrLn " "
+--    putStrLn " "
+--    putStrLn ("EXPANSION on the "
+--                ++
+--                show s
+--                ++
+--                "-side of equation ")
+--    putStrLn (show (eqs !! n))
+--    putStrLn ("on position "
+--                ++
+--                show p
+--                ++
+--                " with proofstate "
+--                )
+--    putStrLn (show pfst)
+--    putStrLn "yields the proofstate"
+--    putStrLn (show exp)
 
 
 -- putStrLn (show x )

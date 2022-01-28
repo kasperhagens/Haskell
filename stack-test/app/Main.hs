@@ -40,8 +40,8 @@ getLeftRight message =
                     else
                         getLeftRight "Left or Right?"
 
-getrule :: String -> IO String
-getrule message =
+getRuleSet :: String -> IO String
+getRuleSet message =
     do  putStrLn message --
         x <- getLine
         if x == "R" || x == "r"
@@ -52,7 +52,28 @@ getrule message =
                     then
                         return "hs"
                     else
-                        getrule "R or H?"
+                        getRuleSet "R or H?"
+
+getRule :: String -> [Rule] -> IO Int
+getRule message rules = do
+    putStrLn message
+    l <- getLine
+    let lth = length rules
+        eval = (fmap (\n x -> (n,x == ("r" ++ show n) || x == show n)) [0..(lth -1)])<*> [l]
+    if null eval
+        then
+            putStrLn "Rule does not exist. Enter a valid rule."
+            getRule message rules
+        else do
+            let n = fst (head (filter (\x -> snd x == True) eval))
+            if (n > lth || n<0)
+                then
+                    putStrLn "Rule does not exist. Enter a valid rule."
+                    getRule message rules
+                else
+                    return n
+        -- xs = pure l
+        --bs = fs <*> xs
 
 -- !!WARNING!! The function getPosition will not do a safety check to deterine whether p is really a position (we could implement this later). If we enter an invalid position then it will crash.
 getPosition :: String -> IO Position
@@ -115,7 +136,7 @@ repeatSimplification rs (eqs, hs) = do
                     putStrLn "These are the rules"
                     putStrLn ("R = " ++ show rs)
                     putStrLn ("H = " ++ show hs)
-                    l <- getrule ("Using R or H to simplify " ++ (show t) ++ "?")
+                    l <- getRuleSet ("Using R or H to simplify " ++ (show t) ++ "?")
                     if l == "rs"
                         then do
                             m <- getInteger "Which rule from R to use in the simplification?"
@@ -134,5 +155,7 @@ pfst = (eqs, rs)
 
 main :: IO ()
 main = do
-    x <- repeatSimplification rs pfst
+--    x <- repeatSimplification rs pfst
+--    print x
+    x <- getRule "Which rule to use?" rs
     print x
