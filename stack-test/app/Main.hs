@@ -42,7 +42,7 @@ getLeftRight message =
 
 getrule :: String -> IO String
 getrule message =
-    do  putStrLn message -- show a message like "Wchich side?"
+    do  putStrLn message --
         x <- getLine
         if x == "R" || x == "r"
             then
@@ -61,12 +61,31 @@ getPosition message =
         p <- getLine
         return (read p :: Position)
 
+--printNthEq :: Equation ->
+
+printPfst :: Proofstate -> IO ()
+printPfst (eqs, hs) = do
+    let l = length eqs
+        eqsindex = zipWith (++) (replicate l "e") (fmap show [0..l])
+        numberedeqs = zipWith (\x y->x ++ ": " ++ y) eqsindex (fmap show eqs)
+
+        m = length hs
+        hsindex = zipWith (++) (replicate m "h") (fmap show [0..m])
+        numberedhs = zipWith (\x y->x ++ ": " ++ y) hsindex (fmap show hs)
+    putStrLn "Equations"
+    mapM_ putStrLn numberedeqs
+    putStrLn " "
+    putStrLn "Hypothesis"
+    mapM_ putStrLn numberedhs
+    putStrLn " "
+
+-- printEqs :: Equat
+
 repeatSimplification :: Rules -> Proofstate -> IO Proofstate
 repeatSimplification rs (eqs, hs) = do
     putStrLn "Current proofstate:"
-    putStrLn ("E = " ++ show eqs)
-    putStrLn ("H = " ++ show hs)
-    n <- getInteger "Which equation to simplify? Counting starts at 0."
+    printPfst (eqs,hs)
+    n <- getInteger "Which equation to simplify?"
     putStrLn ("You have chosen equation " ++ show (eqs !! n))
     s <- getLeftRight "On which side of this equation to simplify: Left or Right?"
     p <- getPosition (
@@ -87,7 +106,9 @@ repeatSimplification rs (eqs, hs) = do
                 then do
                     putStrLn "These are the rules"
                     print rs
-                    m <- getInteger ("Which rule to use to simplify " ++ show t ++"? Counting starts at 0.")
+                    m <- getInteger ("Which rule to use to simplify "
+                        ++
+                        show t ++"?")
                     y <- simplification n s p (rs!!m) (eqs, hs)
                     repeatSimplification rs y
                 else do
@@ -97,16 +118,18 @@ repeatSimplification rs (eqs, hs) = do
                     l <- getrule ("Using R or H to simplify " ++ (show t) ++ "?")
                     if l == "rs"
                         then do
-                            m <- getInteger "Which rule from R to use in the simplification? Counting starts at 0."
+                            m <- getInteger "Which rule from R to use in the simplification?"
                             y <- simplification n s p (rs!!m) (eqs, hs)
                             repeatSimplification rs y
                         else do
-                            m <- getInteger "Which rule from H to use in the simplification? Counting starts at 0."
+                            m <- getInteger "Which rule from H to use in the simplification?"
                             y <- simplification n s p (hs!!m) (eqs, hs)
                             repeatSimplification rs y
 
 rs = [R (F "f" [V 0]) (F "f" [F "f" [V 0]]) (B TT)]
-eqs = [E (F "f" [V 0]) (F "g" [V 0]) (B TT)]
+
+e = E (F "f" [V 0]) (F "g" [V 0]) (B TT)
+eqs = [e, e]
 pfst = (eqs, rs)
 
 main :: IO ()
