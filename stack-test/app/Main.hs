@@ -7,6 +7,7 @@ import Data.Equations
 import Data.Constraints
 import Data.Zz
 import Data.Char
+import Data.List (inits)
 import Data.Maybe
 import Data.Deductionsystem (
     Proofstate,
@@ -96,6 +97,24 @@ getPosition message =
     do  putStrLn message
         p <- getLine
         return (read p :: Position)
+
+getStrategy :: String -> IO String
+getStrategy message =
+    do  putStrLn message
+        str <- getLine
+        if ((map toLower str) `elem` (tail (inits "simplification")))
+            then
+                return "simp"
+            else
+                if (map toLower str) `elem` (tail (inits "expansion"))
+                    then
+                        return "exp"
+                    else
+                        if (map toLower str) `elem` (tail (inits "deletion"))
+                            then
+                                return "del"
+                            else
+                                getStrategy "Enter a valid strategy."
 
 printEqs :: String -> [Equation] -> IO ()
 printEqs message eqs = do
@@ -189,6 +208,18 @@ pfst = (eqs, rs)
 hs = []
 
 playRound :: Rules -> Proofstate -> IO Proofstate
+playRound rs pfst = do
+    putStrLn "Current proofstate:"
+    printPfst pfst
+    putStrLn "Choose one of the following strategies"
+    str <- getStrategy "Choose a strategy: Expansion, Simplification or Deletion"
+    if str == "simp"
+        then
+            interactiveSimplification rs pfst
+        else
+            return pfst -- we have to implement an interactive expansion!
+
+
 
 main :: IO ()
 main = do
