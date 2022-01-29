@@ -188,6 +188,8 @@ eqs = [e, e]
 pfst = (eqs, rs)
 hs = []
 
+playRound :: Rules -> Proofstate -> IO Proofstate
+
 main :: IO ()
 main = do
     x <- interactiveSimplification rs pfst
