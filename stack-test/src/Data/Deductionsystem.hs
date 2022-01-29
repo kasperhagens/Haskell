@@ -4,6 +4,8 @@
 
 -- For the moment we slightly simplify the notion of a proofstate by ignoring the complete/incomplete flag. So we consider a proofstate as a tuple (E,H) where E is a set of equations and H is a set of rules called induction hypothesis.
 -- The goal is to start with a set of equations E and, by using the interference rules, finding a deduction sequence (E,Ø) ⊢ ... ⊢ (Ø,H)
+{-# OPTIONS_GHC -Wno-unrecognised-pragmas #-}
+{-# HLINT ignore "Redundant bracket" #-}
 module Data.Deductionsystem (
     Proofstate,
     Side (..),
@@ -13,7 +15,8 @@ module Data.Deductionsystem (
     simplification,
     equationSide,
     expansionSingleRule,
-    expansion
+    expansion,
+    deletion
     ) where
 import qualified Data.Map as Map
 import Data.Terms (
@@ -39,6 +42,7 @@ import Data.List (delete, nub)
 import Data.Maybe (fromJust)
 import Data.Equations
 import Data.Zz
+import Z3.Monad
 import qualified Data.List as List
 import Prelude hiding (Left, Right)
 -- If we have an equation
@@ -267,29 +271,34 @@ expansionSingleRule n s p (R l r psi) (eqs, hs) = do
             let tau = Map.fromList (equalize l (fromJust u)) -- If tau is empty then we cannot apply the rule to the subterm on position p.
             if null tau
                 then do
-                    putStrLn ("No expansion possible with rule "
+                    putStrLn ("You cannot use "
                         ++
-                        show r
+                        show (R l r psi)
                         ++
-                        show u
+                        " to expand "
+                        ++
+                        show (fromJust u)
                         ++
                         ". Proofstate has not been changed."
                         )
+                    putStrLn " "
                     return (eqs, hs)
                 else do
                     checkconstraint <- uConstraintCheck (Or (N phi) (appsubC tau psi))
                     if checkconstraint
                         then do
-                            putStrLn ("You can do simplification with rule "
+                            putStrLn (
+                                "Proofstate has not been changed. "
                                 ++
-                                show r
+                                "You can do simplification with rule "
+                                ++
+                                show (R l r psi)
                                 ++
                                 " on "
                                 ++
-                                show u
-                                ++
-                                ". Proofstate has not been changed."
+                                show (fromJust u)
                                 )
+                            putStrLn " "
                             return (eqs, hs) -- if checkconstraint holds then we do not need to expand on this rule (since we can do a simplification step).
                             --
                             -- !!!QUESTION!!!
@@ -338,3 +347,17 @@ expansion n s p rs (eqs, hs) = do
                                 -- If we don't use nub we may get multiple occurrences of a single hypothesis (one for each applicable rule).
                                 newpfst = (neweqs, newhs)
                             return newpfst
+
+deletion :: Int -> Proofstate -> IO Proofstate
+deletion n (eqs,hs) = do
+    let e = eqs !! n
+        cstr = constraintEQ e
+    res <- evalZ3 (checkConstraint cstr)
+    if (leftsideEQ e == rightsideEQ e || res == Unsat)
+        then do
+            let neweqs = filter (/= e) eqs
+            return (neweqs, hs)
+        else do
+            putStrLn ("You cannot delete " ++ (show e))
+            putStrLn " "
+            return (eqs, hs)

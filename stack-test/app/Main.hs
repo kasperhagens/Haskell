@@ -16,7 +16,8 @@ import Data.Deductionsystem (
     showsimps,
     simplification,
     equationSide,
-    expansion)
+    expansion,
+    deletion)
 
 getInteger :: String -> IO Int
 getInteger message =
@@ -32,11 +33,11 @@ getLeftRight :: String -> IO Side
 getLeftRight message =
     do  putStrLn message -- show a message like "Wchich side?"
         x <- getLine
-        if x == "Left" || x == "left"
+        if map toLower x `elem` tail (inits "left")
             then
                 return Data.Deductionsystem.Left
             else
-                if x == "Right" || x == "right"
+                if map toLower x `elem` tail (inits "right")
                     then
                         return Data.Deductionsystem.Right
                     else
@@ -224,6 +225,15 @@ interactiveExpansion rs (eqs, hs) = do
         else
             expansion n s p rs (eqs, hs)
 
+interactiveDeletion :: Proofstate -> IO Proofstate
+interactiveDeletion (eqs,hs) = do
+    putStrLn "Current proofstate:"
+    printPfst (eqs,hs)
+    n <- getEq "Which equation to delete?" eqs
+    putStrLn (show (eqs!!n))
+    putStrLn " "
+    deletion n (eqs,hs)
+
 playRound :: Rules -> Proofstate -> IO Proofstate
 playRound rs pfst = do
     putStrLn "Current proofstate:"
@@ -235,9 +245,13 @@ playRound rs pfst = do
         then
             interactiveSimplification rs pfst
         else
-            interactiveExpansion rs pfst
+            if str == "exp"
+                then
+                    interactiveExpansion rs pfst
+                else
+                    interactiveDeletion pfst
 
-play :: Rules -> Proofstate -> IO (Proofstate)
+play :: Rules -> Proofstate -> IO Proofstate
 play rs (eqs, hs) = do
     if null rs
         then do
