@@ -15,7 +15,8 @@ import Data.Deductionsystem (
     Rules,
     showsimps,
     simplification,
-    equationSide)
+    equationSide,
+    expansion)
 
 getInteger :: String -> IO Int
 getInteger message =
@@ -199,6 +200,32 @@ interactiveSimplification rs (eqs, hs) = do
                             y <- simplification n s p (hs!!m) (eqs, hs)
                             return y
 
+interactiveExpansion :: Rules -> Proofstate -> IO Proofstate
+interactiveExpansion rs (eqs, hs) = do
+    putStrLn "Current proofstate:"
+    printPfst (eqs,hs)
+    n <- getEq "Which equation to expand?" eqs
+    putStrLn (show (eqs!!n))
+    putStrLn " "
+    s <- getLeftRight "On which side of this equation to expand: Left or Right?"
+    putStrLn (show ((equationSide (eqs !! n) s)))
+    putStrLn " "
+    p <- getPosition (
+        "Enter the position of the subterm"
+        ++
+    --    show (equationSide (eqs !! n) s)
+    --    ++
+        " to expand"
+        )
+    let u = postoterm (equationSide (eqs !! n) s) p
+    if (u == Nothing)
+        then do
+            putStrLn "Invalid position, try again."
+            putStrLn " "
+            interactiveExpansion rs (eqs, hs)
+        else
+            expansion n s p rs (eqs, hs)
+
 r0=R (F "f" [V 0]) (F "f" [F "f" [V 0]]) (B TT)
 rs = [r0, r0]
 
@@ -217,8 +244,7 @@ playRound rs pfst = do
         then
             interactiveSimplification rs pfst
         else
-            return pfst -- we have to implement an interactive expansion!
-
+            interactiveExpansion rs pfst
 
 
 main :: IO ()
