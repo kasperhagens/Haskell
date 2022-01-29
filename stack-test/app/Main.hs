@@ -180,11 +180,11 @@ interactiveSimplification rs (eqs, hs) = do
             if null hs
                 then do
                     printRules "Rules" rs "r"
-                    m <- getRule ("Which rule do you want to use to simplify"
+                    m <- getRule ("Which rule do you want to use to simplify "
                         ++
                         show t ++"?") rs "r"
                     y <- simplification n s p (rs!!m) (eqs, hs)
-                    interactiveSimplification rs y
+                    return y
                 else do
                     putStrLn "These are your choices for simplification"
                     printRules "Rules" rs "r"
@@ -193,12 +193,10 @@ interactiveSimplification rs (eqs, hs) = do
                     if l == "rs"
                         then do
                             m <- getRule "Which rule from R to use in the simplification?" rs "r"
-                            y <- simplification n s p (rs!!m) (eqs, hs)
-                            return y
+                            simplification n s p (rs!!m) (eqs, hs)
                         else do
                             m <- getRule "Which rule from H to use in the simplification?" hs "h"
-                            y <- simplification n s p (hs!!m) (eqs, hs)
-                            return y
+                            simplification n s p (hs!!m) (eqs, hs)
 
 interactiveExpansion :: Rules -> Proofstate -> IO Proofstate
 interactiveExpansion rs (eqs, hs) = do
@@ -226,6 +224,34 @@ interactiveExpansion rs (eqs, hs) = do
         else
             expansion n s p rs (eqs, hs)
 
+playRound :: Rules -> Proofstate -> IO Proofstate
+playRound rs pfst = do
+    putStrLn "Current proofstate:"
+    putStrLn " "
+    printPfst pfst
+    str <- getStrategy "Choose a strategy: Expansion, Simplification or Deletion"
+    putStrLn " "
+    if str == "simp"
+        then
+            interactiveSimplification rs pfst
+        else
+            interactiveExpansion rs pfst
+
+play :: Rules -> Proofstate -> IO (Proofstate)
+play rs (eqs, hs) = do
+    if null rs
+        then do
+            putStrLn "The set of rules must be nonempty."
+            return (eqs, hs)
+        else
+            if null eqs
+                then do
+                    putStrLn "Proof finished."
+                    return (eqs, hs)
+                else do
+                    pfst <- playRound rs (eqs, hs)
+                    play rs pfst
+
 r0=R (F "f" [V 0]) (F "f" [F "f" [V 0]]) (B TT)
 rs = [r0, r0]
 
@@ -234,20 +260,8 @@ eqs = [e, e]
 pfst = (eqs, rs)
 hs = []
 
-playRound :: Rules -> Proofstate -> IO Proofstate
-playRound rs pfst = do
-    putStrLn "Current proofstate:"
-    printPfst pfst
-    putStrLn "Choose one of the following strategies"
-    str <- getStrategy "Choose a strategy: Expansion, Simplification or Deletion"
-    if str == "simp"
-        then
-            interactiveSimplification rs pfst
-        else
-            interactiveExpansion rs pfst
-
-
 main :: IO ()
 main = do
-    x <- interactiveSimplification rs pfst
+    printRules "Rules " rs "r"
+    x <- play rs (eqs, hs)
     print x
