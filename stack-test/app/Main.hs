@@ -153,8 +153,8 @@ printPfst (eqs, hs) = do
 
 interactiveSimplification :: Rules -> Proofstate -> IO Proofstate
 interactiveSimplification rs (eqs, hs) = do
-    putStrLn "Current proofstate:"
-    printPfst (eqs,hs)
+--    putStrLn "Current proofstate:"
+--    printPfst (eqs,hs)
     n <- getEq "Which equation to simplify?" eqs
     putStrLn (show (eqs!!n))
     putStrLn " "
@@ -184,8 +184,14 @@ interactiveSimplification rs (eqs, hs) = do
                     m <- getRule ("Which rule do you want to use to simplify "
                         ++
                         show t ++"?") rs "r"
-                    y <- simplification n s p (rs!!m) (eqs, hs)
-                    return y
+                    if (null (equalize (leftsideR (rs!!m)) t))
+                        then do
+                            putStrLn "No simplification possible"
+                            putStrLn " "
+                            return (eqs, hs)
+                        else do
+                            y <- simplification n s p (rs!!m) (eqs, hs)
+                            return y
                 else do
                     putStrLn "These are your choices for simplification"
                     printRules "Rules" rs "r"
@@ -194,10 +200,22 @@ interactiveSimplification rs (eqs, hs) = do
                     if l == "rs"
                         then do
                             m <- getRule "Which rule from R to use in the simplification?" rs "r"
-                            simplification n s p (rs!!m) (eqs, hs)
-                        else do
+                            if null (equalize (leftsideR (rs!!m)) t)
+                                then do
+                                        putStrLn "No simplification possible"
+                                        putStrLn " "
+                                        return (eqs, hs)
+                                else
+                                        simplification n s p (rs!!m) (eqs, hs)
+                    else do
                             m <- getRule "Which rule from H to use in the simplification?" hs "h"
-                            simplification n s p (hs!!m) (eqs, hs)
+                            if null (equalize (leftsideR (hs!!m)) t)
+                                 then do
+                                        putStrLn "No simplification possible"
+                                        putStrLn " "
+                                        return (eqs, hs)
+                                else do
+                                        simplification n s p (hs!!m) (eqs, hs)
 
 interactiveExpansion :: Rules -> Proofstate -> IO Proofstate
 interactiveExpansion rs (eqs, hs) = do
@@ -266,11 +284,11 @@ play rs (eqs, hs) = do
                     pfst <- playRound rs (eqs, hs)
                     play rs pfst
 
-r0=R (F "f" [V 0]) (F "f" [F "f" [V 0]]) (B TT)
-rs = [r0, r0]
+r0=R (F "f" [V 0]) (F "g" [V 0]) (B TT)
+rs = [r0]
 
 e = E (F "f" [V 0]) (F "g" [V 0]) (B TT)
-eqs = [e, e]
+eqs = [e]
 pfst = (eqs, rs)
 hs = []
 

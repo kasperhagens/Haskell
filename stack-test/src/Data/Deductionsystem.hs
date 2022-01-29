@@ -358,6 +358,6 @@ deletion n (eqs,hs) = do
             let neweqs = filter (/= e) eqs
             return (neweqs, hs)
         else do
-            putStrLn ("You cannot delete " ++ (show e))
+            putStrLn ("You cannot delete " ++ (show e) ++ ". Proofstate has not been changed.")
             putStrLn " "
             return (eqs, hs)
