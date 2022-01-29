@@ -54,8 +54,6 @@ getRule message rules = do
                         return n
 main :: IO ()
 main = do
-    m <- getRule "Which rule to use?" rs
-    print m
 --    checkconstraint <- uConstraintCheck (Or (N phi) (appsubC tau psi))
 --    putStrLn (show phi
 --        ++

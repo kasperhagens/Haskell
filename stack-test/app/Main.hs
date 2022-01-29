@@ -77,21 +77,25 @@ getRule message rules symb = do
 
 getEq :: String -> [Equation] -> IO Int
 getEq message eqs = do
-    putStrLn message
-    l <- getLine
-    let lth = length eqs
-        eval = (fmap (\n x -> (n,x == ("e" ++ show n) || x == show n)) [0..(lth -1)])<*> [l]
-        evaltrue = filter (\x -> snd x == True) eval
-    if null evaltrue
+    if null (tail eqs)
         then
-            getEq "This equation does not exist. Enter a valid equation." eqs
+            return 0
         else do
-            let n = fst (head evaltrue)
-            if (n > lth || n<0)
+            putStrLn message
+            l <- getLine
+            let lth = length eqs
+                eval = (fmap (\n x -> (n,x == ("e" ++ show n) || x == show n)) [0..(lth -1)]) <*> [l]
+                evaltrue = filter (\x -> snd x == True) eval
+            if null evaltrue
                 then
                     getEq "This equation does not exist. Enter a valid equation." eqs
-                else
-                    return n
+                else do
+                    let n = fst (head evaltrue)
+                    if (n > lth || n<0)
+                        then
+                        getEq "This equation does not exist. Enter a valid equation." eqs
+                        else
+                            return n
 
 -- !!WARNING!! The function getPosition will not do a safety check to deterine whether p is really a position (we could implement this later). If we enter an invalid position then it will crash.
 getPosition :: String -> IO Position
@@ -155,7 +159,7 @@ interactiveSimplification :: Rules -> Proofstate -> IO Proofstate
 interactiveSimplification rs (eqs, hs) = do
 --    putStrLn "Current proofstate:"
 --    printPfst (eqs,hs)
-    n <- getEq "Which equation to simplify?" eqs
+    n <- getEq "Choose an equation to simplify?" eqs
     putStrLn (show (eqs!!n))
     putStrLn " "
     s <- getLeftRight "On which side of this equation to simplify: Left or Right?"
@@ -181,12 +185,11 @@ interactiveSimplification rs (eqs, hs) = do
             if null hs
                 then do
                     printRules "Rules" rs "r"
-                    m <- getRule ("Which rule do you want to use to simplify "
-                        ++
-                        show t ++"?") rs "r"
+                    m <- getRule ("Choose the rule to use for simplification ") rs "r"
+                    putStrLn " "
                     if (null (equalize (leftsideR (rs!!m)) t))
                         then do
-                            putStrLn "No simplification possible"
+                            putStrLn "No simplification possible. Proofstate has not been changed."
                             putStrLn " "
                             return (eqs, hs)
                         else do
@@ -202,7 +205,7 @@ interactiveSimplification rs (eqs, hs) = do
                             m <- getRule "Which rule from R to use in the simplification?" rs "r"
                             if null (equalize (leftsideR (rs!!m)) t)
                                 then do
-                                        putStrLn "No simplification possible"
+                                        putStrLn "No simplification possible. Proofstate has not been changed."
                                         putStrLn " "
                                         return (eqs, hs)
                                 else
@@ -211,7 +214,7 @@ interactiveSimplification rs (eqs, hs) = do
                             m <- getRule "Which rule from H to use in the simplification?" hs "h"
                             if null (equalize (leftsideR (hs!!m)) t)
                                  then do
-                                        putStrLn "No simplification possible"
+                                        putStrLn "No simplification possible. Proofstate has not been changed."
                                         putStrLn " "
                                         return (eqs, hs)
                                 else do
@@ -246,6 +249,7 @@ interactiveExpansion rs (eqs, hs) = do
 interactiveDeletion :: Proofstate -> IO Proofstate
 interactiveDeletion (eqs,hs) = do
     putStrLn "Current proofstate:"
+    putStrLn " "
     printPfst (eqs,hs)
     n <- getEq "Which equation to delete?" eqs
     putStrLn (show (eqs!!n))
