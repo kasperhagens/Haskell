@@ -153,7 +153,7 @@ constraintEqImpRule (E e1 e2 ce) (R r1 r2 cr) =
 -- showsimp rs eqs =
 -- [(sum1(v1)~sum2(v1) [True],sum2(v2)->u(v2,0,0) [True],Right)]
 showsimpleft :: Rule -> Equations -> IO [(Equation, Rule)]
-showsimpleft r es = do
+showsimpleft r es =
     if null es
         then
             return []
@@ -171,7 +171,7 @@ showsimpleft r es = do
                     showsimpleft r (tail es)
 
 showsimpsleft :: Rules -> Equations -> IO [(Equation, Rule)]
-showsimpsleft rs eqs = do
+showsimpsleft rs eqs =
     if null rs
         then
             return []
@@ -226,7 +226,6 @@ type Proofstate = (Equations, Hypothesis)
 -- ([sum1(v1)~u(v1,0,0) [True],sum1(v1)~sum3(v1) [True]],[])
 simplification :: Int -> Side -> Position -> Rule -> Proofstate -> IO Proofstate
 simplification n s p r (eqs, hs) =
-    do
         if n<0 || n >= length eqs
             then
                 return (eqs, hs)
@@ -255,14 +254,14 @@ expansionSingleRule :: Int -> Side -> Position -> Rule -> Proofstate -> IO Proof
 expansionSingleRule n s p (R l r psi) (eqs, hs) = do
     let E a b phi = eqs !! n
         u = postoterm (equationSide (E a b phi) s) p
-    if u == Nothing -- If u equals Nothing then side s of equation (E a b phi) has no subterm on position p.
+    if isNothing u -- If u equals Nothing then side s of equation (E a b phi) has no subterm on position p.
         then do
             putStrLn (
                     show (equationSide (E a b phi) s)
                     ++
                     " has no subterm on position "
                     ++
-                    (show p)
+                    show p
                     ++
                     ". Proofstate has not been changed."
                 )
@@ -314,18 +313,18 @@ expansionSingleRule n s p (R l r psi) (eqs, hs) = do
                                         newequationright = E a (applyrule (R l r psi) b p) adjustconstraint
                                     if s==Left
                                         then do
-                                            let neweqs = newequationleft:(delete (E a b phi) eqs)
-                                                newhs = (R a b phi):hs
+                                            let neweqs = newequationleft:delete (E a b phi) eqs
+                                                newhs = R a b phi:hs
                                             return (neweqs, newhs)
                                         else do
-                                            let neweqs = newequationright:(delete (E a b phi) eqs)
-                                                newhs = (R a b phi):hs
+                                            let neweqs = newequationright:delete (E a b phi) eqs
+                                                newhs = R a b phi:hs
                                             return (neweqs, newhs)
                                 else
                                     return (eqs,hs)
 
 expansion :: Int -> Side -> Position -> Rules -> Proofstate -> IO Proofstate
-expansion n s p rs (eqs, hs) = do
+expansion n s p rs (eqs, hs) =
     if null rs
         then
             return (eqs, hs)
@@ -353,11 +352,26 @@ deletion n (eqs,hs) = do
     let e = eqs !! n
         cstr = constraintEQ e
     res <- evalZ3 (checkConstraint cstr)
-    if (leftsideEQ e == rightsideEQ e || res == Unsat)
+    if leftsideEQ e == rightsideEQ e || res == Unsat
         then do
             let neweqs = filter (/= e) eqs
             return (neweqs, hs)
         else do
-            putStrLn ("You cannot delete " ++ (show e) ++ ". Proofstate has not been changed.")
+            putStrLn ("You cannot delete " ++ show e ++ ". Proofstate has not been changed.")
             putStrLn " "
             return (eqs, hs)
+
+eqdeletion :: Int -> Int -> [Position] -> [Position] -> Proofstate -> IO Proofstate
+-- n: the equation on which eqdeletion is applied
+-- m: the number of holes in the context C
+-- pl: the list of positions of holes on the left -side of the nth equation
+-- pr: the list of positions of holes on the right-side of the nth equation
+eqdeletion n m pl pr (eqs,hs) = do
+    let E a b phi = eqs !! n
+        tsleft = map (postoterm a) pl
+        tsright = map (postoterm b) pr
+        uneqs = zipWith ( \x y -> N(B(x `Eq` y)) ) tsleft tsright :: [Constraint]
+        addconstraint = foldr And (B(TT)) uneqs --conjunct all the constraints in uneqs
+        neweq = E a b (And phi addconstraint)
+        neweqs = replaceNthElt eqs n neweq
+    return (neweqs, hs)
