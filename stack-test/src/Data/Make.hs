@@ -26,6 +26,11 @@ makeTerm (F "-" [t1,t2]) = do
                                 b <- makeTerm t2
                                 mkSub [a,b]
 
+makeTerm (F "/" [t1,t2]) = do
+                                a <- makeTerm t1
+                                b <- makeTerm t2
+                                mkDiv a b
+
 makeTerm (F f l) = do
                                 fname <- mkStringSymbol f
                                 int <- mkIntSort

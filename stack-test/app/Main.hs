@@ -336,10 +336,13 @@ play rs (eqs, hs) = do
                     pfst <- playRound rs (eqs, hs)
                     play rs pfst
 
-r0=R (F "f" [V 0]) (F "g" [V 0]) (B TT)
-rs = [r0]
+r0 = R (F "sum" [V 0]) (F "-100" []) (B (V 0 `Lt` F "0" []))
+r1 = R (F "sum" [V 0]) (F "v" [V 0, F "sum" [F "-" [V 0, F "1" []]]]) (B (V 0 `Gt` F "0" []))
+r2 = R (F "sum" [V 0]) (F "return" [F "0" []]) (B (V 0 `Eq` F "0" []))
+r3 = R (F "v" [V 0, F "return" [V 1]]) (F "return" [F "+" [V 1, V 2]]) (B TT)
+rs = [r0, r1, r2, r3]
 
-e = E (F "f" [V 0]) (F "g" [V 0]) (B TT)
+e = E (F "sum" [V 0]) (F "return" [F "/" [F "*" [V 0, F "+" [V 0, F "1" []]], F "2" []]]) (B TT)
 eqs = [e]
 pfst = (eqs, rs)
 hs = []
