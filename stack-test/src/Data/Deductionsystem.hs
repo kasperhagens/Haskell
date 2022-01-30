@@ -16,7 +16,8 @@ module Data.Deductionsystem (
     equationSide,
     expansionSingleRule,
     expansion,
-    deletion
+    deletion,
+    eqdeletion
     ) where
 import qualified Data.Map as Map
 import Data.Terms (
@@ -39,7 +40,7 @@ import Data.Rules (
     applyrule,
     replaceNthElt)
 import Data.List (delete, nub)
-import Data.Maybe (fromJust)
+import Data.Maybe (fromJust, isNothing)
 import Data.Equations
 import Data.Zz
 import Z3.Monad
@@ -361,17 +362,23 @@ deletion n (eqs,hs) = do
             putStrLn " "
             return (eqs, hs)
 
-eqdeletion :: Int -> Int -> [Position] -> [Position] -> Proofstate -> IO Proofstate
+eqdeletion ::Int -> Int -> [Position] -> [Position] -> Proofstate -> IO Proofstate
 -- n: the equation on which eqdeletion is applied
--- m: the number of holes in the context C
+-- h: the number of holes in the context C
 -- pl: the list of positions of holes on the left -side of the nth equation
 -- pr: the list of positions of holes on the right-side of the nth equation
-eqdeletion n m pl pr (eqs,hs) = do
+eqdeletion n h pl pr (eqs,hs) = do
     let E a b phi = eqs !! n
-        tsleft = map (postoterm a) pl
-        tsright = map (postoterm b) pr
-        uneqs = zipWith ( \x y -> N(B(x `Eq` y)) ) tsleft tsright :: [Constraint]
-        addconstraint = foldr And (B(TT)) uneqs --conjunct all the constraints in uneqs
-        neweq = E a b (And phi addconstraint)
-        neweqs = replaceNthElt eqs n neweq
-    return (neweqs, hs)
+        tsleft = map fromJust (filter (/= Nothing ) (map (postoterm a) pl))
+        tsright = map fromJust (filter (/= Nothing) (map (postoterm b) pr))
+    if (length tsleft /= h || length tsright /= h)
+        then do
+            putStrLn "Input contained invalid positions. Proofstate has not been changed."
+            putStrLn " "
+            return (eqs, hs)
+        else do
+            let uneqs = zipWith ( \x y -> N(B(x `Eq` y)) ) tsleft tsright
+                addconstraint = foldr And (B(TT)) uneqs --conjunct all the constraints in uneqs
+                neweq = E a b (And phi addconstraint)
+                neweqs = replaceNthElt eqs n neweq
+            return (neweqs, hs)

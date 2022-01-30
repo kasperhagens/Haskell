@@ -7,7 +7,7 @@ import Data.Equations
 import Data.Constraints
 import Data.Zz
 import Data.Char
-import Data.List (inits)
+import Data.List (inits, nub)
 import Data.Maybe
 import Data.Deductionsystem (
     Proofstate,
@@ -17,17 +17,18 @@ import Data.Deductionsystem (
     simplification,
     equationSide,
     expansion,
-    deletion)
+    deletion,
+    eqdeletion)
 
-getInteger :: String -> IO Int
-getInteger message =
-    do  putStrLn message -- show a message like "Enter an integer"
+getHoles :: String -> IO Int
+getHoles message =
+    do  putStrLn message
         x <- getLine
-        if all isDigit x && (read x >= 0)
+        if all isDigit x && (read x >= 1)
             then
                 return (read x :: Int)
             else
-                getInteger "Enter a valid integer"
+                getHoles "The number of holes must be an integer >0"
 
 getLeftRight :: String -> IO Side
 getLeftRight message =
@@ -99,28 +100,44 @@ getEq message eqs = do
 
 -- !!WARNING!! The function getPosition will not do a safety check to deterine whether p is really a position (we could implement this later). If we enter an invalid position then it will crash.
 getPosition :: String -> IO Position
-getPosition message =
-    do  putStrLn message
-        p <- getLine
-        return (read p :: Position)
+getPosition message = do
+    putStrLn message
+    p <- getLine
+    return (read p :: Position)
+
+getPositions :: String -> IO [Position]
+getPositions message = do
+    putStrLn message
+    p <- getLine
+    return (read p :: [Position])
 
 getStrategy :: String -> IO String
-getStrategy message =
-    do  putStrLn message
-        str <- getLine
-        if ((map toLower str) `elem` (tail (inits "simplification")))
-            then
-                return "simp"
-            else
-                if (map toLower str) `elem` (tail (inits "expansion"))
-                    then
-                        return "exp"
-                    else
-                        if (map toLower str) `elem` (tail (inits "deletion"))
-                            then
-                                return "del"
-                            else
-                                getStrategy "Enter a valid strategy."
+getStrategy message = do
+    putStrLn message
+    str <- getLine
+    if ((map toLower str) `elem` (tail (inits "simplification")))
+        then
+            return "simp"
+        else
+            if (map toLower str) `elem` (tail (inits "expansion"))
+                then
+                    return "exp"
+                else
+                    if (map toLower str) `elem` (tail (inits "deletion"))
+                        then
+                            return "del"
+                        else
+                            if (
+                                (map toLower str) `elem` (tail (inits "equation deletion"))
+                                ||
+                                (map toLower str) `elem` (tail (inits "eq-deletion"))
+                                ||
+                                (map toLower str) `elem` (tail (inits "equation-deletion"))
+                                    )
+                                    then
+                                        return "eq-del"
+                                    else
+                                        getStrategy "Enter a valid strategy."
 
 printEqs :: String -> [Equation] -> IO ()
 printEqs message eqs = do
@@ -256,12 +273,39 @@ interactiveDeletion (eqs,hs) = do
     putStrLn " "
     deletion n (eqs,hs)
 
+interactiveEqDeletion :: Proofstate -> IO Proofstate
+interactiveEqDeletion (eqs,hs) = do
+    putStrLn "Current proofstate:"
+    putStrLn " "
+    printPfst (eqs,hs)
+    n <- getEq "On which equation do you want to apply Equation Deletion?" eqs
+    putStrLn (show (eqs!!n))
+    putStrLn " "
+    h <- getHoles "How many holes does the context contain?"
+    pl <- getPositions "Enter the list of positions of these holes on the left-side of the equation."
+    let m = length (nub pl)
+    if (m /= h)
+        then do
+            putStrLn ("Invalid input: " ++ (show h) ++ " different holes were expected. Proofstate has not been changed")
+            putStrLn " "
+            return (eqs, hs)
+        else do
+            pr <- getPositions "Enter the list of positions of these holes on the right-side of the equation."
+            let k = length (nub pr)
+            if (k /= h)
+                then do
+                    putStrLn ("Invalid input: " ++ (show h) ++ " different holes were expected. Proofstate has not been changed")
+                    putStrLn " "
+                    return (eqs, hs)
+                else
+                    eqdeletion n h pl pr (eqs,hs)
+
 playRound :: Rules -> Proofstate -> IO Proofstate
 playRound rs pfst = do
     putStrLn "Current proofstate:"
     putStrLn " "
     printPfst pfst
-    str <- getStrategy "Choose a strategy: Expansion, Simplification or Deletion"
+    str <- getStrategy "Choose a strategy: Simplification, Expansion, Equation deletion or Deletion"
     putStrLn " "
     if str == "simp"
         then
@@ -271,7 +315,11 @@ playRound rs pfst = do
                 then
                     interactiveExpansion rs pfst
                 else
-                    interactiveDeletion pfst
+                    if str == "del"
+                        then
+                            interactiveDeletion pfst
+                        else
+                            interactiveEqDeletion pfst
 
 play :: Rules -> Proofstate -> IO Proofstate
 play rs (eqs, hs) = do
