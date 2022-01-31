@@ -39,6 +39,7 @@ import Data.Rules (
     rightsideR,
     appsubR,
     applyrule,
+    constraintR,
     replaceNthElt)
 import Data.List (delete, nub)
 import Data.Maybe (fromJust, isNothing)
@@ -228,24 +229,32 @@ type Proofstate = (Equations, Hypothesis)
 -- ([sum1(v1)~u(v1,0,0) [True],sum1(v1)~sum3(v1) [True]],[])
 simplification :: Int -> Side -> Position -> Rule -> Proofstate -> IO Proofstate
 simplification n s p r (eqs, hs) =
-        if n<0 || n >= length eqs
-            then
-                return (eqs, hs)
-            else
-                do
-                    -- !!!WRONG!!! constraintEqImpRule will check whether uConstraintCheck (ce -> appsubC tau cr) where tau = getinstanceleft r (eqs!!n). Instead you should calculate tau = equalize r
-                    checkconstraint <- constraintEqImpRule (eqs !! n) r
+    if n<0 || n >= length eqs
+        then
+            return (eqs, hs)
+        else do
+            let u = postoterm (equationSide (eqs !! n) s) p
+            if isNothing u
+                then do
+                    putStrLn (show (equationSide (eqs !! n) s) ++ " has no subterm on position " ++ show p ++ ". Proofstate has not been changed.")
+                    return (eqs, hs)
+                else do
+                    let t = fromJust u
+                        ce = constraintEQ (eqs !! n)
+                        cr = constraintR r
+                        tau = Map.fromList (equalize (leftsideR r) t)
+                    checkconstraint <- uConstraintCheck (Or (N ce) (appsubC tau cr))
                     if checkconstraint
                         then
                             case s of
                                 Left -> return (replaceNthElt eqs n (E e1 e2 c), hs)
-                                    where   e1 = applyrule r (leftsideEQ (eqs!!n)) p
-                                            e2 = rightsideEQ (eqs!!n)
-                                            c =  constraintEQ (eqs !! n)
+                                    where e1 = applyrule r (leftsideEQ (eqs!!n)) p
+                                          e2 = rightsideEQ (eqs!!n)
+                                          c = constraintEQ (eqs !! n)
                                 Right -> return (replaceNthElt eqs n (E e1 e2 c), hs)
-                                    where   e1 = leftsideEQ (eqs!!n)
-                                            e2 = applyrule r (rightsideEQ (eqs!!n)) p
-                                            c = constraintEQ (eqs !! n)
+                                    where e1 = leftsideEQ (eqs!!n)
+                                          e2 = applyrule r (rightsideEQ (eqs!!n)) p
+                                          c = constraintEQ (eqs !! n)
                         else
                             return (eqs, hs)
 

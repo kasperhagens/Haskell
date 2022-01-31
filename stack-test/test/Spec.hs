@@ -67,8 +67,9 @@ printPfst (eqs, hs) = do
 r0 = R (F "sum" [V 0]) (F "error" []) (B (V 0 `Lt` F "0" []))
 r1 = R (F "sum" [V 0]) (F "v" [V 0, F "sum" [F "-" [V 0, F "1" []]]]) (B (V 0 `Gt` F "0" []))
 r2 = R (F "sum" [V 0]) (F "return" [F "0" []]) (B (V 0 `Eq` F "0" []))
-r3 = R (F "v" [V 0, F "return" [V 1]]) (F "return" [F "+" [V 1, V 2]]) (B TT)
-rs = [r0, r1, r2, r3]
+r3 = R (F "v" [V 0, F "return" [V 1]]) (F "return" [F "+" [V 0, V 1]]) (B TT)
+r4 = R (F "return" [V 0]) (F "error" []) (B (V 0 `Lt` F "0" []))
+rs = [r0, r1, r2, r3, r4]
 
 e = E (F "v" [V 0, F "sum" [F "-" [V 0, F "1" []]]]) (F "return" [F "/" [F "*" [V 0, F "+" [V 0, F "1" []]], F "2" []]]) (And (B TT) (B (V 0 `Gt` F "0" [])))
 eqs = [e]
@@ -78,12 +79,15 @@ r=h0
 pfst = (eqs, hs)
 n = 0
 s = Data.Deductionsystem.Left
-p = []
-tau = getinstanceleft h0 e
+p = [1]
 
 main :: IO ()
 main = do
-    print tau
+    putStrLn "Current proofstate"
+    printPfst pfst
+    putStrLn "Simplification gives"
+    x <- simplification n s p h0 pfst
+    printPfst x
 -- putStrLn (show x )
 --    putStrLn "Test suite not yet implemented"
 --    Z.printResult
