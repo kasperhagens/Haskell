@@ -12,6 +12,7 @@ module Data.Deductionsystem (
     Rules,
     Hypothesis,
     showsimps,
+    getinstanceleft,
     simplification,
     equationSide,
     expansionSingleRule,
@@ -232,6 +233,7 @@ simplification n s p r (eqs, hs) =
                 return (eqs, hs)
             else
                 do
+                    -- !!!WRONG!!! constraintEqImpRule will check whether uConstraintCheck (ce -> appsubC tau cr) where tau = getinstanceleft r (eqs!!n). Instead you should calculate tau = equalize r
                     checkconstraint <- constraintEqImpRule (eqs !! n) r
                     if checkconstraint
                         then

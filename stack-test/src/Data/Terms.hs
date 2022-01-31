@@ -42,14 +42,100 @@ convtoStr (F "-" [t1, t2]) =
             o1
         else
             let F f l = t2 in
-            if length l == 1
+            if f == "+" || f == "-"
+                then
+                    o2
+                else
+                    o1
+
+convtoStr (F "*" [t1, t2]) =
+    let o1 = convtoStr t1 ++ "*" ++ convtoStr t2
+        o2 = convtoStr t1 ++ "*" ++ "(" ++ convtoStr t2 ++ ")"
+        o3 = "(" ++ convtoStr t1 ++ ")"++ "*" ++ convtoStr t2
+        o4 = "(" ++ convtoStr t1 ++ ")"++ "*" ++ "(" ++ convtoStr t2 ++ ")"
+    in
+    if isVar t1
+        then
+            if isVar t2
                 then
                     o1
                 else
-                    o2
+                    let F f l = t2 in
+                    if f == "+" || f == "-"
+                        then
+                            o2
+                        else
+                            o1
+        else
+            let F f l = t1 in
+            if f == "+" || f == "-"
+                then
+                    if isVar t2
+                        then
+                            o3
+                        else
+                            let F g k = t2 in
+                            if f == "+" || f == "-"
+                                then
+                                    o4
+                                else
+                                    o3
+                else
+                    if isVar t2
+                        then
+                            o1
+                        else
+                            let F g k = t2 in
+                            if f == "+" || f == "-"
+                                then
+                                    o2
+                                else
+                                    o1
 
-convtoStr (F "*" [t1, t2]) = "(" ++ convtoStr t1 ++ ")" ++ "*" ++ "(" ++ convtoStr t2 ++ ")"
-convtoStr (F "/" [t1, t2]) = "(" ++ convtoStr t1 ++ ")"++ "/" ++ "(" ++ convtoStr t2 ++ ")"
+convtoStr (F "/" [t1, t2]) =
+
+    let o1 = convtoStr t1 ++ "/" ++ convtoStr t2
+        o2 = convtoStr t1 ++ "/" ++ "(" ++ convtoStr t2 ++ ")"
+        o3 = "(" ++ convtoStr t1 ++ ")"++ "/" ++ convtoStr t2
+        o4 = "(" ++ convtoStr t1 ++ ")"++ "/" ++ "(" ++ convtoStr t2 ++ ")"
+    in
+    if isVar t1
+        then
+            if isVar t2
+                then
+                    o1
+                else
+                    let F f l = t2 in
+                    if f == "+" || f == "-"
+                        then
+                            o2
+                        else
+                            o1
+        else
+            let F f l = t1 in
+            if f == "+" || f == "-"
+                then
+                    if isVar t2
+                        then
+                            o3
+                        else
+                            let F g k = t2 in
+                            if f == "+" || f == "-"
+                                then
+                                    o4
+                                else
+                                    o3
+                else
+                    if isVar t2
+                        then
+                            o1
+                        else
+                            let F g k = t2 in
+                            if f == "+" || f == "-"
+                                then
+                                    o2
+                                else
+                                    o1
 convtoStr (F f []) = f
 convtoStr (F f ts) = f ++ "(" ++ (concat [convtoStr t ++ "," | t <- ts]) ++ ")"
 

@@ -16,9 +16,20 @@ import Data.Deductionsystem (
     expansionSingleRule,
     expansion,
     deletion,
-    eqdeletion)
+    eqdeletion,
+    getinstanceleft
+    )
 import qualified Data.Map as Map
 import Data.Maybe
+
+constraintEqImpRule :: Equation -> Rule -> IO Bool
+constraintEqImpRule (E e1 e2 ce) (R r1 r2 cr) =
+    if null tau
+        then
+            return False
+        else
+            uConstraintCheck (Or (N ce) (appsubC tau cr))
+    where tau = getinstanceleft (R r1 r2 cr) (E e1 e2 ce)
 
 printEqs :: String -> [Equation] -> IO ()
 printEqs message eqs = do
@@ -53,19 +64,26 @@ printPfst (eqs, hs) = do
     printEqs "Equations" eqs
     printRules "Hypothesis" hs "h"
 
-n=0
-eqs = [E (F "/" [F "*" [F "2" [], V 0], F "2" []]) (V 0) (B TT)]
-pfst = (eqs, [])
+r0 = R (F "sum" [V 0]) (F "error" []) (B (V 0 `Lt` F "0" []))
+r1 = R (F "sum" [V 0]) (F "v" [V 0, F "sum" [F "-" [V 0, F "1" []]]]) (B (V 0 `Gt` F "0" []))
+r2 = R (F "sum" [V 0]) (F "return" [F "0" []]) (B (V 0 `Eq` F "0" []))
+r3 = R (F "v" [V 0, F "return" [V 1]]) (F "return" [F "+" [V 1, V 2]]) (B TT)
+rs = [r0, r1, r2, r3]
+
+e = E (F "v" [V 0, F "sum" [F "-" [V 0, F "1" []]]]) (F "return" [F "/" [F "*" [V 0, F "+" [V 0, F "1" []]], F "2" []]]) (And (B TT) (B (V 0 `Gt` F "0" [])))
+eqs = [e]
+h0 = R (F "sum" [V 0]) (F "return" [F "/" [F "*" [V 0, F "+" [V 0, F "1" []]], F "2" []]]) (B TT)
+hs = [h0]
+r=h0
+pfst = (eqs, hs)
+n = 0
+s = Data.Deductionsystem.Left
+p = []
+tau = getinstanceleft h0 e
 
 main :: IO ()
 main = do
-    printPfst pfst
-    x <- eqdeletion 0 1 [[]] [[]] pfst
-    putStrLn "Equation Deletion gives"
-    printPfst x
-    y <- deletion 0 x
-    putStrLn "Deletion gives"
-    printPfst y
+    print tau
 -- putStrLn (show x )
 --    putStrLn "Test suite not yet implemented"
 --    Z.printResult
