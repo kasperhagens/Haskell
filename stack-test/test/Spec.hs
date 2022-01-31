@@ -14,77 +14,58 @@ import Data.Deductionsystem (
     showsimps,
     simplification,
     expansionSingleRule,
-    expansion)
+    expansion,
+    deletion,
+    eqdeletion)
 import qualified Data.Map as Map
 import Data.Maybe
 
-n=0
-s = Data.Deductionsystem.Left :: Side
-p = [] :: Position
-r0 = R (F "f" [V 2, V 3]) (V 2) (B (V 2 `Ge` V 3)) :: Rule
-r1 = R (F "f" [V 2, V 3]) (V 3) (B (V 2 `Lt` V 3)) :: Rule
-rs = [r0,r1] :: Rules
---psi = constraintR r :: Constraint
---l = leftsideR r :: Term
-eqs = [E (F "f" [F "g" [V 0], V 1]) (F "g" [V 0]) (B TT)]
-hs = [] :: Hypothesis
-pfst :: Proofstate
-pfst = (eqs, hs) :: Proofstate
---E a b phi = eqs !! n
---u = postoterm (Data.Deductionsystem.equationSide (E a b phi) s) p
---tau = Map.fromList (equalize l (fromJust u))
+printEqs :: String -> [Equation] -> IO ()
+printEqs message eqs = do
+    let l = length eqs
+    if l==0
+        then do
+            putStrLn ("No " ++ (map toLower message))
+            putStrLn " "
+        else do
+        let eqsindex = zipWith (++) (replicate l "e") (fmap show [0..l])
+            numberedeqs = zipWith (\x y->x ++ ": " ++ y) eqsindex (fmap show eqs)
+        putStrLn message
+        mapM_ putStrLn numberedeqs
+        putStrLn " "
 
-getRule :: String -> [Rule] -> IO Int
-getRule message rules = do
-    putStrLn message
-    l <- getLine
-    let lth = length rules
-        eval = (fmap (\n x -> (n,x == ("r" ++ show n) || x == show n)) [0..(lth -1)] <*> [l]
-        if null eval
-            then
-                PutStrLn "Rule does not exist. Enter a valid rule."
-                getRule
-            else
-                n = fst (head (filter (\x -> snd x == True) eval))
-                if (n > lth || n<0)
-                    then
-                        PutStrLn "Rule does not exist. Enter a valid rule."
-                        getRule
-                    else
-                        return n
+printRules :: String -> [Rule] -> String -> IO ()
+printRules message rs symb = do
+    let l = length rs
+    if l==0
+        then do
+            putStrLn ("No " ++ (map toLower message))
+            putStrLn " "
+        else do
+        let rsindex = zipWith (++) (replicate l symb) (fmap show [0..l])
+            numberedrs = zipWith (\x y->x ++ ": " ++ y) rsindex (fmap show rs)
+        putStrLn message
+        mapM_ putStrLn numberedrs
+        putStrLn " "
+
+printPfst :: Proofstate -> IO ()
+printPfst (eqs, hs) = do
+    printEqs "Equations" eqs
+    printRules "Hypothesis" hs "h"
+
+n=0
+eqs = [E (F "/" [F "*" [F "2" [], V 0], F "2" []]) (V 0) (B TT)]
+pfst = (eqs, [])
+
 main :: IO ()
 main = do
---    checkconstraint <- uConstraintCheck (Or (N phi) (appsubC tau psi))
---    putStrLn (show phi
---        ++
---        " -> "
---        ++
---        show (appsubC tau psi)
---        ++
---        " is "
---        ++
---        show checkconstraint)
---
---    exp <- expansion n s p rs pfst
---    putStrLn " "
---    putStrLn " "
---    putStrLn ("EXPANSION on the "
---                ++
---                show s
---                ++
---                "-side of equation ")
---    putStrLn (show (eqs !! n))
---    putStrLn ("on position "
---                ++
---                show p
---                ++
---                " with proofstate "
---                )
---    putStrLn (show pfst)
---    putStrLn "yields the proofstate"
---    putStrLn (show exp)
-
-
+    printPfst pfst
+    x <- eqdeletion 0 1 [[]] [[]] pfst
+    putStrLn "Equation Deletion gives"
+    printPfst x
+    y <- deletion 0 x
+    putStrLn "Deletion gives"
+    printPfst y
 -- putStrLn (show x )
 --    putStrLn "Test suite not yet implemented"
 --    Z.printResult

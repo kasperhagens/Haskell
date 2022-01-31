@@ -2,6 +2,7 @@ module Data.Make where
 import Z3.Monad
 import Data.Constraints
 import Data.Terms
+import Data.Char (isDigit)
 -- import PrelNames (c1TyConKey)
 
 makeTerm :: Term -> Z3 AST
@@ -10,7 +11,17 @@ makeTerm (V x) =  do
                                 mkIntVar s
 
     --mkFreshIntVar (show (V x))
-makeTerm (F i [])= mkInteger (read i)
+makeTerm (F i [])=
+    if all isDigit i
+        then
+            mkInteger (read i)
+        else do
+            fname <- mkStringSymbol i
+            int <- mkIntSort
+            let outsort = int
+            fsymb <- mkFuncDecl fname [] outsort
+            mkApp fsymb []
+
 makeTerm (F "+" [t1,t2]) = do
                                 a <- makeTerm t1
                                 b <- makeTerm t2

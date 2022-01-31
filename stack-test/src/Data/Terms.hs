@@ -24,11 +24,30 @@ type Funcname = String
 type Varname = Int
 data Term = V Varname| F Funcname [Term] deriving (Eq)
 
+isVar :: Term -> Bool
+isVar (V x) = True
+isVar (F f l) = False
+
 -- convtoStr is used for defining instance Show of Term. Note that convtoStr t contains additional superfluous commas for any non-variable term t. For example convtoStr (F "f" [V "V 1"]) = f(v1,). Therefore, we wrote a function remsuperflcommas to remove the superfluous commas.
 convtoStr :: Term -> String
-convtoStr (V x) = "v"++(show x)
-convtoStr (F "+" [t1, t2]) = "(" ++ convtoStr t1 ++ ")" ++ "+" ++ "(" ++ convtoStr t2 ++ ")"
-convtoStr (F "-" [t1, t2]) = "(" ++ convtoStr t1 ++ ")" ++ "-" ++ "(" ++ convtoStr t2 ++ ")"
+convtoStr (V x) = "v" ++ show x
+convtoStr (F "+" [t1, t2]) = convtoStr t1 ++ "+" ++ convtoStr t2
+
+convtoStr (F "-" [t1, t2]) =
+    let o1 = convtoStr t1 ++ "-" ++ convtoStr t2
+        o2 = convtoStr t1 ++ "-" ++ "(" ++ convtoStr t2 ++ ")"
+    in
+    if isVar t2
+        then
+            o1
+        else
+            let F f l = t2 in
+            if length l == 1
+                then
+                    o1
+                else
+                    o2
+
 convtoStr (F "*" [t1, t2]) = "(" ++ convtoStr t1 ++ ")" ++ "*" ++ "(" ++ convtoStr t2 ++ ")"
 convtoStr (F "/" [t1, t2]) = "(" ++ convtoStr t1 ++ ")"++ "/" ++ "(" ++ convtoStr t2 ++ ")"
 convtoStr (F f []) = f
