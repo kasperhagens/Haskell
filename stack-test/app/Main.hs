@@ -24,7 +24,7 @@ getHoles :: String -> IO Int
 getHoles message =
     do  putStrLn message
         x <- getLine
-        if all isDigit x && (read x >= 1)
+        if all isDigit x && read x >= 1
             then
                 return (read x :: Int)
             else
@@ -63,21 +63,21 @@ getRule message rules symb = do
     putStrLn message
     l <- getLine
     let lth = length rules
-        eval = (fmap (\n x -> (n,x == (symb ++ show n) || x == show n)) [0..(lth -1)])<*> [l]
-        evaltrue = filter (\x -> snd x == True) eval
+        eval = fmap (\n x -> (n,x == symb ++ show n || x == show n)) [0..(lth -1)]<*> [l]
+        evaltrue = filter snd eval
     if null evaltrue
         then
             getRule "This rule does not exist. Enter a valid rule." rules symb
         else do
             let n = fst (head evaltrue)
-            if (n > lth || n<0)
+            if n > lth || n<0
                 then
                     getRule "This rule does not exist. Enter a valid rule." rules symb
                 else
                     return n
 
 getEq :: String -> [Equation] -> IO Int
-getEq message eqs = do
+getEq message eqs =
     if null (tail eqs)
         then
             return 0
@@ -85,25 +85,47 @@ getEq message eqs = do
             putStrLn message
             l <- getLine
             let lth = length eqs
-                eval = (fmap (\n x -> (n,x == ("e" ++ show n) || x == show n)) [0..(lth -1)]) <*> [l]
-                evaltrue = filter (\x -> snd x == True) eval
+                eval = fmap (\n x -> (n,x == ("e" ++ show n) || x == show n)) [0..(lth -1)] <*> [l]
+                evaltrue = filter (\x -> snd x) eval
             if null evaltrue
                 then
                     getEq "This equation does not exist. Enter a valid equation." eqs
                 else do
                     let n = fst (head evaltrue)
-                    if (n > lth || n<0)
+                    if n > lth || n<0
                         then
                         getEq "This equation does not exist. Enter a valid equation." eqs
                         else
                             return n
+
+subsequentCommas :: String -> Bool
+subsequentCommas l =
+    not (null l || null (tail l)) && (
+        let (x:y:ys) = l in
+        (x == ',' && y == ',') ||
+                subsequentCommas (y:ys))
+
+isIntList :: String -> Bool
+isIntList l =
+    not (head l /= '[' || last l /= ']') && (
+        let k = tail (init l)
+            y = filter (\x -> isDigit x || x == ',') k
+        in
+        k == y &&
+                not (head y == ',' || last y == ',') &&
+                not (subsequentCommas k))
 
 -- !!WARNING!! The function getPosition will not do a safety check to deterine whether p is really a position (we could implement this later). If we enter an invalid position then it will crash.
 getPosition :: String -> IO Position
 getPosition message = do
     putStrLn message
     p <- getLine
+   -- if isIntList p
+        --then
     return (read p :: Position)
+        --else
+            --getPosition "Enter a valid position."
+
 
 getPositions :: String -> IO [Position]
 getPositions message = do
@@ -115,25 +137,24 @@ getStrategy :: String -> IO String
 getStrategy message = do
     putStrLn message
     str <- getLine
-    if ((map toLower str) `elem` (tail (inits "simplification")))
+    if map toLower str `elem` tail (inits "simplification")
         then
             return "simp"
         else
-            if (map toLower str) `elem` (tail (inits "expansion"))
+            if map toLower str `elem` tail (inits "expansion")
                 then
                     return "exp"
                 else
-                    if (map toLower str) `elem` (tail (inits "deletion"))
+                    if map toLower str `elem` tail (inits "deletion")
                         then
                             return "del"
                         else
-                            if (
-                                (map toLower str) `elem` (tail (inits "equation deletion"))
+                            if
+                                map toLower str `elem` tail (inits "equation deletion")
                                 ||
-                                (map toLower str) `elem` (tail (inits "eq-deletion"))
+                                map toLower str `elem` tail (inits "eq-deletion")
                                 ||
-                                (map toLower str) `elem` (tail (inits "equation-deletion"))
-                                    )
+                                map toLower str `elem` tail (inits "equation-deletion")
                                     then
                                         return "eq-del"
                                     else
@@ -144,7 +165,7 @@ printEqs message eqs = do
     let l = length eqs
     if l==0
         then do
-            putStrLn ("No " ++ (map toLower message))
+            putStrLn ("No " ++ map toLower message)
             putStrLn " "
         else do
         let eqsindex = zipWith (++) (replicate l "e") (fmap show [0..l])
@@ -158,7 +179,7 @@ printRules message rs symb = do
     let l = length rs
     if l==0
         then do
-            putStrLn ("No " ++ (map toLower message))
+            putStrLn ("No " ++ map toLower message)
             putStrLn " "
         else do
         let rsindex = zipWith (++) (replicate l symb) (fmap show [0..l])
@@ -177,10 +198,10 @@ interactiveSimplification rs (eqs, hs) = do
 --    putStrLn "Current proofstate:"
 --    printPfst (eqs,hs)
     n <- getEq "Choose an equation to simplify?" eqs
-    putStrLn (show (eqs!!n))
+    print (eqs!!n)
     putStrLn " "
     s <- getLeftRight "On which side of this equation to simplify: Left or Right?"
-    putStrLn (show ((equationSide (eqs !! n) s)))
+    print (equationSide (eqs !! n) s)
     putStrLn " "
     p <- getPosition (
         "Enter the position of the subterm"
@@ -190,33 +211,32 @@ interactiveSimplification rs (eqs, hs) = do
         " to simplify"
         )
     let u = postoterm (equationSide (eqs !! n) s) p
-    if (u == Nothing)
+    if isNothing u
         then do
             putStrLn "Invalid position, try again."
             putStrLn " "
             interactiveSimplification rs (eqs, hs)
         else do
             let t = fromJust u
-            putStrLn (show t)
+            print t
             putStrLn " "
             if null hs
                 then do
                     printRules "Rules" rs "r"
-                    m <- getRule ("Choose the rule to use for simplification ") rs "r"
+                    m <- getRule "Choose the rule to use for simplification " rs "r"
                     putStrLn " "
-                    if (null (equalize (leftsideR (rs!!m)) t))
+                    if null (equalize (leftsideR (rs!!m)) t)
                         then do
                             putStrLn "No simplification possible. Proofstate has not been changed."
                             putStrLn " "
                             return (eqs, hs)
-                        else do
-                            y <- simplification n s p (rs!!m) (eqs, hs)
-                            return y
+                        else
+                            simplification n s p (rs!!m) (eqs, hs)
                 else do
                     putStrLn "These are your choices for simplification"
                     printRules "Rules" rs "r"
                     printRules "Hypothesis" hs "h"
-                    l <- getRuleSet ("Using a Rule or an Hypothesis? Press R or H.")
+                    l <- getRuleSet "Using a Rule or an Hypothesis? Press R or H."
                     if l == "rs"
                         then do
                             m <- getRule "Which rule from R to use in the simplification?" rs "r"
@@ -234,7 +254,7 @@ interactiveSimplification rs (eqs, hs) = do
                                         putStrLn "No simplification possible. Proofstate has not been changed."
                                         putStrLn " "
                                         return (eqs, hs)
-                                else do
+                                else
                                         simplification n s p (hs!!m) (eqs, hs)
 
 interactiveExpansion :: Rules -> Proofstate -> IO Proofstate
@@ -242,10 +262,10 @@ interactiveExpansion rs (eqs, hs) = do
     putStrLn "Current proofstate:"
     printPfst (eqs,hs)
     n <- getEq "Which equation to expand?" eqs
-    putStrLn (show (eqs!!n))
+    print (eqs!!n)
     putStrLn " "
     s <- getLeftRight "On which side of this equation to expand: Left or Right?"
-    putStrLn (show ((equationSide (eqs !! n) s)))
+    print (equationSide (eqs !! n) s)
     putStrLn " "
     p <- getPosition (
         "Enter the position of the subterm"
@@ -255,7 +275,7 @@ interactiveExpansion rs (eqs, hs) = do
         " to expand"
         )
     let u = postoterm (equationSide (eqs !! n) s) p
-    if (u == Nothing)
+    if isNothing u
         then do
             putStrLn "Invalid position, try again."
             putStrLn " "
@@ -269,7 +289,7 @@ interactiveDeletion (eqs,hs) = do
     putStrLn " "
     printPfst (eqs,hs)
     n <- getEq "Which equation to delete?" eqs
-    putStrLn (show (eqs!!n))
+    print (eqs!!n)
     putStrLn " "
     deletion n (eqs,hs)
 
@@ -279,22 +299,22 @@ interactiveEqDeletion (eqs,hs) = do
     putStrLn " "
     printPfst (eqs,hs)
     n <- getEq "On which equation do you want to apply Equation Deletion?" eqs
-    putStrLn (show (eqs!!n))
+    print (eqs!!n)
     putStrLn " "
     h <- getHoles "How many holes does the context contain?"
     pl <- getPositions "Enter the list of positions of these holes on the left-side of the equation."
     let m = length (nub pl)
-    if (m /= h)
+    if m /= h
         then do
-            putStrLn ("Invalid input: " ++ (show h) ++ " different holes were expected. Proofstate has not been changed")
+            putStrLn ("Invalid input: " ++ show h ++ " different holes were expected. Proofstate has not been changed")
             putStrLn " "
             return (eqs, hs)
         else do
             pr <- getPositions "Enter the list of positions of these holes on the right-side of the equation."
             let k = length (nub pr)
-            if (k /= h)
+            if k /= h
                 then do
-                    putStrLn ("Invalid input: " ++ (show h) ++ " different holes were expected. Proofstate has not been changed")
+                    putStrLn ("Invalid input: " ++ show h ++ " different holes were expected. Proofstate has not been changed")
                     putStrLn " "
                     return (eqs, hs)
                 else
@@ -322,19 +342,16 @@ playRound rs pfst = do
                             interactiveEqDeletion pfst
 
 play :: Rules -> Proofstate -> IO Proofstate
-play rs (eqs, hs) = do
-    if null rs
-        then do
-            putStrLn "The set of rules must be nonempty."
-            return (eqs, hs)
-        else
-            if null eqs
-                then do
-                    putStrLn "Proof finished."
-                    return (eqs, hs)
-                else do
-                    pfst <- playRound rs (eqs, hs)
-                    play rs pfst
+play rs (eqs, hs)
+  | null rs = do
+        putStrLn "The set of rules must be nonempty."
+        return (eqs, hs)
+  | null eqs = do
+        putStrLn "Proof finished."
+        return (eqs, hs)
+  | otherwise = do
+        pfst <- playRound rs (eqs, hs)
+        play rs pfst
 
 r0 = R (F "sum" [V 0]) (F "error" []) (B (V 0 `Lt` F "0" []))
 r1 = R (F "sum" [V 0]) (F "v" [V 0, F "sum" [F "-" [V 0, F "1" []]]]) (B (V 0 `Gt` F "0" []))
