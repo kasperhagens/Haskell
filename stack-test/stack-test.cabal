@@ -41,7 +41,14 @@ library
   build-depends:
       base >=4.7 && <5
     , containers
+    , fail (>=4.9.0.0 && <4.10)
     , ghc
+    , ghc-prim
+    , prettyprinter
+    , semigroups >=0.17
+    , template-haskell >=2.9
+    , text
+    , void >=0.4 && <0.8
     , z3
   default-language: Haskell2010
 
@@ -55,8 +62,15 @@ executable stack-test-exe
   build-depends:
       base >=4.7 && <5
     , containers
+    , fail (>=4.9.0.0 && <4.10)
     , ghc
+    , ghc-prim
+    , prettyprinter
+    , semigroups >=0.17
     , stack-test
+    , template-haskell >=2.9
+    , text
+    , void >=0.4 && <0.8
     , z3
   default-language: Haskell2010
 
@@ -72,7 +86,14 @@ test-suite stack-test-test
   build-depends:
       base >=4.7 && <5
     , containers
+    , fail (>=4.9.0.0 && <4.10)
     , ghc
+    , ghc-prim
+    , prettyprinter
+    , semigroups >=0.17
     , stack-test
+    , template-haskell >=2.9
+    , text
+    , void >=0.4 && <0.8
     , z3
   default-language: Haskell2010

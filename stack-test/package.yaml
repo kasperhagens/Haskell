@@ -24,6 +24,13 @@ dependencies:
 - containers
 - z3
 - ghc
+- fail (>=4.9.0.0 && <4.10)
+- ghc-prim
+- prettyprinter
+- semigroups >=0.17
+- template-haskell >=2.9
+- text
+- void >=0.4 && <0.8
 
 library:
   source-dirs: src
