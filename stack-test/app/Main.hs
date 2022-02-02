@@ -107,24 +107,28 @@ subsequentCommas l =
 
 isIntList :: String -> Bool
 isIntList l =
-    not (head l /= '[' || last l /= ']') && (
+    null l
+    ||
+    l == "[]"
+    ||
+    (not (head l /= '[' || last l /= ']') && (
         let k = tail (init l)
             y = filter (\x -> isDigit x || x == ',') k
         in
         k == y &&
                 not (head y == ',' || last y == ',') &&
-                not (subsequentCommas k))
+                not (subsequentCommas k)))
 
 -- !!WARNING!! The function getPosition will not do a safety check to deterine whether p is really a position (we could implement this later). If we enter an invalid position then it will crash.
 getPosition :: String -> IO Position
 getPosition message = do
     putStrLn message
     p <- getLine
-   -- if isIntList p
-        --then
-    return (read p :: Position)
-        --else
-            --getPosition "Enter a valid position."
+    if isIntList p
+        then
+            return (read p :: Position)
+    else
+        getPosition "Enter a valid position."
 
 
 getPositions :: String -> IO [Position]

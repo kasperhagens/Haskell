@@ -81,13 +81,31 @@ n = 0
 s = Data.Deductionsystem.Left
 p = [1]
 
+subsequentCommas :: String -> Bool
+subsequentCommas l =
+    not (null l || null (tail l)) && (
+        let (x:y:ys) = l in
+        (x == ',' && y == ',') ||
+                subsequentCommas (y:ys))
+
+isIntList :: String -> Bool
+isIntList l =
+--    null l
+--    ||
+    (not (head l /= '[' || last l /= ']') && (
+        let k = tail (init l)
+            y = filter (\x -> isDigit x || x == ',') k
+        in
+        k == y &&
+                not (head y == ',' || last y == ',') &&
+                not (subsequentCommas k)))
+
+l=[]
+
+
 main :: IO ()
 main = do
-    putStrLn "Current proofstate"
-    printPfst pfst
-    putStrLn "Simplification gives"
-    x <- simplification n s p h0 pfst
-    printPfst x
+    print (isIntList l)
 -- putStrLn (show x )
 --    putStrLn "Test suite not yet implemented"
 --    Z.printResult
