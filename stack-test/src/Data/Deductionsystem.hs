@@ -376,7 +376,7 @@ deletion n (eqs,hs) = do
 eqdeletion ::Int -> Int -> [Position] -> [Position] -> Proofstate -> IO Proofstate
 -- n: the equation on which eqdeletion is applied
 -- h: the number of holes in the context C
--- pl: the list of positions of holes on the left -side of the nth equation
+-- pl: the list of positions of holes on the left-side of the nth equation
 -- pr: the list of positions of holes on the right-side of the nth equation
 eqdeletion n h pl pr (eqs,hs) = do
     let E a b phi = eqs !! n

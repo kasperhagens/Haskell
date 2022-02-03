@@ -100,8 +100,7 @@ isIntList l =
                 not (head y == ',' || last y == ',') &&
                 not (subsequentCommas k)))
 
-l=[]
-
+l = []
 
 main :: IO ()
 main = do

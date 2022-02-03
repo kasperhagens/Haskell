@@ -20,15 +20,15 @@ import Data.Deductionsystem (
     deletion,
     eqdeletion)
 
-getHoles :: String -> IO Int
-getHoles message =
+getNumbOfHoles :: String -> IO Int
+getNumbOfHoles message =
     do  putStrLn message
         x <- getLine
         if all isDigit x && read x >= 1
             then
                 return (read x :: Int)
             else
-                getHoles "The number of holes must be an integer >0"
+                getNumbOfHoles "The number of holes must be an integer >0."
 
 getLeftRight :: String -> IO Side
 getLeftRight message =
@@ -131,11 +131,14 @@ getPosition message = do
         getPosition "Enter a valid position."
 
 
-getPositions :: String -> IO [Position]
-getPositions message = do
-    putStrLn message
-    p <- getLine
-    return (read p :: [Position])
+getHolePositions :: Int -> IO [Position]
+getHolePositions n = do
+    let x = zipWith (++) (replicate n "Enter the position of hole ") (map show [1..n])
+        y = fmap getPosition x
+    sequence y
+--    putStrLn message
+--    p <- getLine
+--    return (read p :: [Position])
 
 getStrategy :: String -> IO String
 getStrategy message = do
@@ -305,24 +308,29 @@ interactiveEqDeletion (eqs,hs) = do
     n <- getEq "On which equation do you want to apply Equation Deletion?" eqs
     print (eqs!!n)
     putStrLn " "
-    h <- getHoles "How many holes does the context contain?"
-    pl <- getPositions "Enter the list of positions of these holes on the left-side of the equation."
-    let m = length (nub pl)
-    if m /= h
+    h <- getNumbOfHoles "How many holes does the context have?"
+    if h==1
         then do
-            putStrLn ("Invalid input: " ++ show h ++ " different holes were expected. Proofstate has not been changed")
-            putStrLn " "
-            return (eqs, hs)
+            p <- getPosition "Enter the position of this hole"
+            eqdeletion n h [p] [p] (eqs,hs)
         else do
-            pr <- getPositions "Enter the list of positions of these holes on the right-side of the equation."
-            let k = length (nub pr)
-            if k /= h
+            ps <- getHolePositions h
+            let m = length (nub ps)
+            if m /= h
                 then do
                     putStrLn ("Invalid input: " ++ show h ++ " different holes were expected. Proofstate has not been changed")
                     putStrLn " "
                     return (eqs, hs)
-                else
-                    eqdeletion n h pl pr (eqs,hs)
+                else do
+--            pr <- getPositions "Enter the list of positions of these holes on the right-side of the equation."
+--            let k = length (nub pr)
+--            if k /= h
+--                then do
+--                    putStrLn ("Invalid input: " ++ show h ++ " different holes were expected. Proofstate has not been changed")
+--                    putStrLn " "
+--                    return (eqs, hs)
+--                else
+                    eqdeletion n h ps ps (eqs,hs)
 
 playRound :: Rules -> Proofstate -> IO Proofstate
 playRound rs pfst = do
