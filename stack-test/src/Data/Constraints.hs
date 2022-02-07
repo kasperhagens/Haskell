@@ -1,6 +1,8 @@
 module Data.Constraints where
 import Data.Terms
 import Data.Side
+import  Data.List
+import qualified Maybes as Data.Maybe
 
 data Basicformula =   TT
                     | FF
@@ -52,17 +54,27 @@ appsubC s (Or c1 c2) = Or (appsubC s c1) (appsubC s c2)
 appsubC s (And c1 c2) = And (appsubC s c1) (appsubC s c2)
 appsubC s (N c) = N (appsubC s c)
 
-constrToList :: Constraint -> [[Side]]
-constrToList (B f) = [[]]
-constrToList (N c) = constrToList c
-constrToList (c1 `And` c2) =
-    [Data.Side.Left : x | x <- constrToList c1]
+--constrToL is a helper function in order to define constrToList
+constrToL :: Constraint -> [[Side]]
+constrToL (B f) = [[]]
+constrToL (N c) = constrToL c
+constrToL (c1 `And` c2) =
+    [Data.Side.Left : x | x <- constrToL c1]
     ++
-    [Data.Side.Right : y | y <- constrToList c2]
-constrToList (c1 `Or` c2) = constrToList (c1 `And` c2)
+    [Data.Side.Right : y | y <- constrToL c2]
+constrToL (c1 `Or` c2) = constrToList (c1 `And` c2)
+
+constrToList :: Constraint -> [[Side]]
+constrToList c = [u | y <- constrToList c, u <- inits y]
 
 --listToConsr c l = the subconstraint of c occuring at position l
--- listToConstr :: Constraint -> [Side] -> Constraint
--- listToConstr c [] = c
--- listToConstr (c1 `And` c2) (Data.Side.Left:l) = listToConstr c1 l
--- listToConstr (c1 `And` c2) (Data.Side.Left:l) = listToConstr c1 l
+listToConstr :: Constraint -> [Side] -> Maybe Constraint
+listToConstr c [] = Just c
+listToConstr (B f) s = if null s then Just (B f) else Nothing
+listToConstr (N c) s = if null s then Just (N c) else Nothing
+listToConstr (c1 `And` c2) (Data.Side.Left : l) = listToConstr c1 l
+listToConstr (c1 `And` c2) (Data.Side.Right : l) = listToConstr c2 l
+listToConstr (c1 `Or` c2) s = listToConstr (c1 `And` c2) s
+
+subCstrs :: Constraint -> [([Side], Constraint)]
+subCstrs c = [(x, Data.Maybe.fromJust (listToConstr c x))| x <- constrToList c, Data.Maybe.isJust (listToConstr c x)]
