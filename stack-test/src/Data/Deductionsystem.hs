@@ -369,7 +369,7 @@ deletion n (eqs,hs) = do
             putStrLn " "
             return (eqs, hs)
 
-eqdeletion ::Int -> Int -> [Position] -> [Position] -> Proofstate -> IO Proofstate
+eqdeletion :: Int -> Int -> [Position] -> [Position] -> Proofstate -> IO Proofstate
 -- n: the equation on which eqdeletion is applied
 -- h: the number of holes in the context C
 -- pl: the list of positions of holes on the left-side of the nth equation
@@ -389,3 +389,11 @@ eqdeletion n h pl pr (eqs,hs) = do
                 neweq = E a b (And phi addconstraint)
                 neweqs = replaceNthElt eqs n neweq
             return (neweqs, hs)
+
+-- Generalization n p (eqs, hs) will remove the subconstraint occuring on position p of the constraint of the nth equation in eqs.
+generalization :: Int -> [Side] -> Proofstate -> IO Proofstate
+generalization n p (eqs, hs) = do
+    let E a b c = eqs !! n
+        newc = removeCstrAtPos c p
+        neweq = E a b newc
+    return (replaceNthElt eqs n neweq, hs)

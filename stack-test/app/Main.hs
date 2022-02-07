@@ -332,6 +332,16 @@ interactiveEqDeletion (eqs,hs) = do
 --                else
                     eqdeletion n h ps ps (eqs,hs)
 
+interactiveGeneralization :: Proofstate -> IO Proofstate
+interactiveGeneralization (eqs, hs) = do
+    putStrLn "Current proofstate:"
+    putStrLn " "
+    printPfst (eqs,hs)
+    n <- getEq "Which equation to Generalize?" eqs
+    print (eqs!!n)
+    putStrLn " "
+
+
 playRound :: Rules -> Proofstate -> IO Proofstate
 playRound rs pfst = do
     putStrLn "Current proofstate:"

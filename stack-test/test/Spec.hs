@@ -22,6 +22,7 @@ import Data.Deductionsystem (
 import qualified Data.Map as Map
 import Data.Maybe
 import Data.Constraints
+import Data.Side
 
 constraintEqImpRule :: Equation -> Rule -> IO Bool
 constraintEqImpRule (E e1 e2 ce) (R r1 r2 cr) =
@@ -104,12 +105,21 @@ isIntList l =
 l = []
 
 c1 = B (V 0 `Gt` F "0" []) `And` (B (V 1 `Gt` F "0" []) `And` B (V 2 `Gt` F "0" []))
-c2 = B (V 0 `Gt` F "0" []) `And` B (V 1 `Gt` F "0" [])
 
 main :: IO ()
 main = do
-    print (subCstrs c1)
-    print (subCstrs c2)
+    print "We have the constraint"
+    print c1
+    putStrLn ("If we remove the subconstraint at position [] we get")
+    print (removeCstrAtPos c1 [])
+    putStrLn ("If we remove the subconstraint at position [Left] we get")
+    print (removeCstrAtPos c1 [Data.Side.Left])
+    putStrLn ("If we remove the subconstraint at position [Left, Left] we get")
+    print (removeCstrAtPos c1 [Data.Side.Left, Data.Side.Left])
+    putStrLn ("If we remove the subconstraint at position [Right, Left] we get")
+    print (removeCstrAtPos c1 [Data.Side.Right, Data.Side.Left])
+    putStrLn ("If we remove the subconstraint at position [Right, Right] we get")
+    print (removeCstrAtPos c1 [Data.Side.Right, Data.Side.Right])
 -- putStrLn (show x )
 --    putStrLn "Test suite not yet implemented"
 --    Z.printResult
