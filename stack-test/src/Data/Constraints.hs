@@ -1,5 +1,6 @@
 module Data.Constraints where
 import Data.Terms
+import Data.Side
 
 data Basicformula =   TT
                     | FF
@@ -50,3 +51,18 @@ appsubC s (B f) = B (appsubB s f)
 appsubC s (Or c1 c2) = Or (appsubC s c1) (appsubC s c2)
 appsubC s (And c1 c2) = And (appsubC s c1) (appsubC s c2)
 appsubC s (N c) = N (appsubC s c)
+
+constrToList :: Constraint -> [[Side]]
+constrToList (B f) = [[]]
+constrToList (N c) = constrToList c
+constrToList (c1 `And` c2) =
+    [Data.Side.Left : x | x <- constrToList c1]
+    ++
+    [Data.Side.Right : y | y <- constrToList c2]
+constrToList (c1 `Or` c2) = constrToList (c1 `And` c2)
+
+--listToConsr c l = the subconstraint of c occuring at position l
+-- listToConstr :: Constraint -> [Side] -> Constraint
+-- listToConstr c [] = c
+-- listToConstr (c1 `And` c2) (Data.Side.Left:l) = listToConstr c1 l
+-- listToConstr (c1 `And` c2) (Data.Side.Left:l) = listToConstr c1 l

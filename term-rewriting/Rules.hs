@@ -131,3 +131,12 @@ applyrule r t p
     if (equalize (leftsideR r) (Maybe.fromJust (postoterm t p))) /= [] then (replace t p a) else t
     | otherwise = t
         where a = appsub (Map.fromList (equalize (leftsideR r) (Maybe.fromJust (postoterm t p)))) (rightsideR r)
+
+constrToList :: Constraint -> [[Int]]
+constrToList (B f) = [[]]
+constrToList (N c) = constrToList c
+constrToList (c1 `And` c2) =
+    [0 : x | x <- constrToList c1]
+    ++
+    [1 : y | y <- constrToList c2]
+constrToList (c1 `Or` c2) = constrToList (c1 `And` c2)

@@ -41,6 +41,7 @@ import Data.Rules (
     applyrule,
     constraintR,
     replaceNthElt)
+import Data.Side
 import Data.List (delete, nub)
 import Data.Maybe (fromJust, isNothing)
 import Data.Equations
@@ -126,11 +127,6 @@ type Equations = [Equation]
 -- r5 = R (F "u" [V 1, V 2, V 3]) (F "u" [V 1, F "+" [V 2, F "1" [] ], F "+" [V 3, V 2]]) (B (V 2 `Le` V 1))
 -- r6 = R (F "u" [V 1, V 2, V 3]) (F "return" [V 3]) (N (B (V 2 `Le` V 1)))
 -- sum2 = [r4, r5, r6]
-data Side = Left | Right deriving (Eq, Show)
-
-equationSide :: Equation -> Side -> Term
-equationSide (E t1 t2 c) Left = t1
-equationSide (E t1 t2 c) Right = t2
 
 -- constraintEqImpRule e r = True <=> The constraint of equation e implies the constraint of (an instance of) constraint of rule r
 constraintEqImpRule :: Equation -> Rule -> IO Bool

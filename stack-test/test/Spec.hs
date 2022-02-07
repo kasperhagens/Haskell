@@ -21,6 +21,7 @@ import Data.Deductionsystem (
     )
 import qualified Data.Map as Map
 import Data.Maybe
+import Data.Constraints (constrToList)
 
 constraintEqImpRule :: Equation -> Rule -> IO Bool
 constraintEqImpRule (E e1 e2 ce) (R r1 r2 cr) =
@@ -102,9 +103,13 @@ isIntList l =
 
 l = []
 
+c1 = B (V 0 `Gt` F "0" []) `And` (B (V 1 `Gt` F "0" []) `And` B (V 2 `Gt` F "0" []))
+c2 = B (V 0 `Gt` F "0" []) `And` B (V 1 `Gt` F "0" [])
+
 main :: IO ()
 main = do
-    print (isIntList l)
+    print (constrToList c1)
+    print (constrToList c2)
 -- putStrLn (show x )
 --    putStrLn "Test suite not yet implemented"
 --    Z.printResult

@@ -6,6 +6,7 @@ import qualified Data.Map as Map
 import Data.Terms (Term(..), Varname, Substitution, appsub)
 import Data.Rules (Rule (..), leftsideR, rightsideR, appsubR)
 import Data.Constraints
+import Data.Side
 
 --Example of equation
 --E (F "f" [V 1]) (F "g" [V 2]) (B (V 1 `Le` V 2))
@@ -27,3 +28,7 @@ reverseEQ (E t1 t2 c) = E t2 t1 c
 
 appsubE :: Substitution -> Equation -> Equation
 appsubE s (E t1 t2 c) = E (appsub s t1) (appsub s t2) (appsubC s c)
+
+equationSide :: Equation -> Side -> Term
+equationSide (E t1 t2 c) Data.Side.Left = t1
+equationSide (E t1 t2 c) Data.Side.Right = t2
