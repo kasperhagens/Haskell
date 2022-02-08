@@ -130,7 +130,6 @@ getPosition message = do
     else
         getPosition "Enter a valid position."
 
-
 getHolePositions :: Int -> IO [Position]
 getHolePositions n = do
     let x = zipWith (++) (replicate n "Enter the position of hole ") (map show [1..n])
@@ -139,6 +138,14 @@ getHolePositions n = do
 --    putStrLn message
 --    p <- getLine
 --    return (read p :: [Position])
+
+-- printSubCstrs :: Equation -> IO
+
+getPosSubConstr :: String -> Equation -> IO [Side]
+getPosSubConstr message (E a b c) = do
+    putStrLn message
+    str <- getLine
+    return (read str :: [Side])
 
 getStrategy :: String -> IO String
 getStrategy message = do
@@ -339,6 +346,7 @@ interactiveGeneralization (eqs, hs) = do
     printPfst (eqs,hs)
     n <- getEq "Which equation to Generalize?" eqs
     print (eqs!!n)
+    cstr <- getPosSubConstr "Which "
     putStrLn " "
 
 
