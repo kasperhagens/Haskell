@@ -18,7 +18,8 @@ import Data.Deductionsystem (
     equationSide,
     expansion,
     deletion,
-    eqdeletion)
+    eqdeletion,
+    generalization)
 
 getNumbOfHoles :: String -> IO Int
 getNumbOfHoles message =
@@ -139,7 +140,14 @@ getHolePositions n = do
 --    p <- getLine
 --    return (read p :: [Position])
 
--- printSubCstrs :: Equation -> IO
+printSubCstrs :: Equation -> IO ()
+printSubCstrs (E a b c) = do
+    let l = subCstrs c
+        positions = fmap fst l
+        subconstraints = fmap snd l
+    sequence_ (zipWith (\x y -> putStrLn("Constraint: " ++ show x ++ "\n" ++ "Position: " ++ show y ++ "\n")) subconstraints positions)
+
+
 
 getPosSubConstr :: String -> Equation -> IO [Side]
 getPosSubConstr message (E a b c) = do
@@ -169,10 +177,16 @@ getStrategy message = do
                                 map toLower str `elem` tail (inits "eq-deletion")
                                 ||
                                 map toLower str `elem` tail (inits "equation-deletion")
+                                ||
+                                map toLower str `elem` tail (inits "eq deletion")
                                     then
                                         return "eq-del"
                                     else
-                                        getStrategy "Enter a valid strategy."
+                                        if map toLower str `elem` tail (inits "generalization")
+                                            then
+                                                return "gen"
+                                            else
+                                                getStrategy "Enter a valid strategy."
 
 printEqs :: String -> [Equation] -> IO ()
 printEqs message eqs = do
@@ -247,7 +261,7 @@ interactiveSimplification rs (eqs, hs) = do
                         else
                             simplification n s p (rs!!m) (eqs, hs)
                 else do
-                    putStrLn "These are your choices for simplification"
+                    putStrLn "These are the possibilities for simplification \n"
                     printRules "Rules" rs "r"
                     printRules "Hypothesis" hs "h"
                     l <- getRuleSet "Using a Rule or an Hypothesis? Press R or H."
@@ -346,8 +360,10 @@ interactiveGeneralization (eqs, hs) = do
     printPfst (eqs,hs)
     n <- getEq "Which equation to Generalize?" eqs
     print (eqs!!n)
-    cstr <- getPosSubConstr "Which "
-    putStrLn " "
+    putStrLn "These are all subconstraints with their corresponding positions."
+    printSubCstrs (eqs!!n)
+    p <- getPosSubConstr "Which of these do you want to remove? Enter the corresponding position." (eqs !!n)
+    generalization n p (eqs, hs)
 
 
 playRound :: Rules -> Proofstate -> IO Proofstate
@@ -355,7 +371,7 @@ playRound rs pfst = do
     putStrLn "Current proofstate:"
     putStrLn " "
     printPfst pfst
-    str <- getStrategy "Choose a strategy: Simplification, Expansion, Equation deletion or Deletion"
+    str <- getStrategy "Choose a strategy: Simplification, Expansion, Equation Deletion, Deletion or Generalization."
     putStrLn " "
     if str == "simp"
         then
@@ -369,7 +385,11 @@ playRound rs pfst = do
                         then
                             interactiveDeletion pfst
                         else
-                            interactiveEqDeletion pfst
+                            if str == "eq-del"
+                                then
+                                    interactiveEqDeletion pfst
+                                else
+                                    interactiveGeneralization pfst
 
 play :: Rules -> Proofstate -> IO Proofstate
 play rs (eqs, hs)
@@ -393,6 +413,8 @@ e = E (F "sum" [V 0]) (F "return" [F "/" [F "*" [V 0, F "+" [V 0, F "1" []]], F 
 eqs = [e]
 pfst = (eqs, rs)
 hs = []
+
+--g = E (V 0) (V 0) (B (V 0 `Gt` F "0" []) `And` (B (V 1 `Gt` F "0" []) `And` B (V 2 `Gt` F "0" [])))
 
 main :: IO ()
 main = do
