@@ -102,6 +102,7 @@ removeTrues (c1 `Or` c2)
   | otherwise =
         removeTrues c1 `Or` removeTrues c2
 
+--remo is a helper function to define removeCstrAtPos
 remo :: Constraint -> [Side] -> Constraint
 remo c p
   | Data.Maybe.isNothing (listToConstr c p) =
