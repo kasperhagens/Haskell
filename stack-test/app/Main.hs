@@ -384,7 +384,7 @@ interactiveGeneralization (eqs, hs) = do
     print (eqs!!n)
     putStrLn "\nThis is a list of all subconstraints."
     printSubCstrs (eqs!!n)
-    p <- getPosSubConstr "\nWhich of these do you want to remove? Enter the corresponding number." (eqs !!n)
+    p <- getPosSubConstr "\nWhich of these subconstraints do you want to remove? Enter the corresponding number." (eqs !!n)
     generalization n p (eqs, hs)
 
 
