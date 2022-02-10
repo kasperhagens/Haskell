@@ -143,17 +143,39 @@ getHolePositions n = do
 printSubCstrs :: Equation -> IO ()
 printSubCstrs (E a b c) = do
     let l = subCstrs c
-        positions = fmap fst l
+        n = length l
+        indices = [0..n]
+--        positions = fmap fst l
         subconstraints = fmap snd l
-    sequence_ (zipWith (\x y -> putStrLn("Constraint: " ++ show x ++ "\n" ++ "Position: " ++ show y ++ "\n")) subconstraints positions)
+    sequence_ (zipWith (\x y -> putStrLn(show x ++ ". " ++ show y)) indices subconstraints)
 
+getConstraintInt :: String -> [([Side], Constraint)] -> IO Int
+getConstraintInt message subcstrs = do
+    putStrLn message
+    str <- getLine
+    if  not (null str)
+        &&
+        all isDigit str
+        &&
+        (read str :: Int)>= 0
+        &&
+        (read str :: Int) <= length subcstrs - 1
+            then
+                return (read str :: Int)
+            else
+                getConstraintInt "Enter a valid number." subcstrs
 
 
 getPosSubConstr :: String -> Equation -> IO [Side]
 getPosSubConstr message (E a b c) = do
-    putStrLn message
-    str <- getLine
-    return (read str :: [Side])
+    let l = subCstrs c -- :: [ ([Side], Constraint) ]
+        n = length l
+        indices = [0..n]
+        positions = fmap fst l -- :: [[Side]]
+        subconstraints = fmap snd l -- :: [Constraint]
+        tuples = zip indices positions -- :: [(Int, [Side])]
+    m <- getConstraintInt message l
+    return (snd (tuples !! m))
 
 getStrategy :: String -> IO String
 getStrategy message = do
@@ -360,9 +382,9 @@ interactiveGeneralization (eqs, hs) = do
     printPfst (eqs,hs)
     n <- getEq "Which equation to Generalize?" eqs
     print (eqs!!n)
-    putStrLn "These are all subconstraints with their corresponding positions."
+    putStrLn "\nThis is a list of all subconstraints."
     printSubCstrs (eqs!!n)
-    p <- getPosSubConstr "Which of these do you want to remove? Enter the corresponding position." (eqs !!n)
+    p <- getPosSubConstr "\nWhich of these do you want to remove? Enter the corresponding number." (eqs !!n)
     generalization n p (eqs, hs)
 
 
