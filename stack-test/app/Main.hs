@@ -425,18 +425,39 @@ play rs (eqs, hs)
         pfst <- playRound rs (eqs, hs)
         play rs pfst
 
-r0 = R (F "sum" [V 0]) (F "error" []) (B (V 0 `Lt` F "0" []))
-r1 = R (F "sum" [V 0]) (F "v" [V 0, F "sum" [F "-" [V 0, F "1" []]]]) (B (V 0 `Gt` F "0" []))
-r2 = R (F "sum" [V 0]) (F "return" [F "0" []]) (B (V 0 `Eq` F "0" []))
-r3 = R (F "v" [V 0, F "return" [V 1]]) (F "return" [F "+" [V 0, V 1]]) (B TT)
-rs = [r0, r1, r2, r3]
+--Example 1
+-- A rewrite system corresponding to a recursive implementation of the (partial) function sum : Z -> N, where sum(n) = 0 + 1 + 2 + ... + n, and sum(n) undefined for n<0.
+-- The equation e is the statement sum(n)= n*(n+1)/n [n>=0]
+--
+--
+-- r0 = R (F "sum" [V 0]) (F "error" []) (B (V 0 `Lt` F "0" []))
+-- r1 = R (F "sum" [V 0]) (F "v" [V 0, F "sum" [F "-" [V 0, F "1" []]]]) (B (V 0 `Gt` F "0" []))
+-- r2 = R (F "sum" [V 0]) (F "return" [F "0" []]) (B (V 0 `Eq` F "0" []))
+-- r3 = R (F "v" [V 0, F "return" [V 1]]) (F "return" [F "+" [V 0, V 1]]) (B TT)
+-- rs = [r0, r1, r2, r3]
+-- e = E (F "sum" [V 0]) (F "return" [F "/" [F "*" [V 0, F "+" [V 0, F "1" []]], F "2" []]]) (B (V 0 `Ge` F "0" []))
+-- eqs = [e]
+-- pfst = (eqs, rs)
+-- hs = []
 
-e = E (F "sum" [V 0]) (F "return" [F "/" [F "*" [V 0, F "+" [V 0, F "1" []]], F "2" []]]) (B (V 0 `Ge` F "0" []))
-eqs = [e]
-pfst = (eqs, rs)
-hs = []
 
---g = E (V 0) (V 0) (B (V 0 `Gt` F "0" []) `And` (B (V 1 `Gt` F "0" []) `And` B (V 2 `Gt` F "0" [])))
+--Example 2
+-- A rewrite system corresponding to two imperative implementations (sum1 and sum2) of the function sum : Z -> N, where sum(n) = 0 + 1 + 2 + ... + n and sum(n)=0 for n<0. One of the two (sum1) will calculate it like
+-- 0 -> 0+1 -> (0+1)+2 -> ((0+1)+2)+3 -> ... -> (...)+n
+-- whereas the other (sum2) will calculate it like
+-- 0 -> 0+n -> (0+n)+(n-1) -> ((0+n)+(n-1))+(n-2) -> ... -> (...)+1
+-- The equation e is the statement sum1(n) = sum2(n) [True]
+--
+-- Rules sum1
+r10 = R (F "sum1" [V 0]) (F "u" [V 0, F "1" [], F "0" []]) (B TT)
+r11 = R (F "u" [V 0, V 1, V 2]) (F "u" [V 0, F "+" [V 1, F "1" []], F "+" [V 1, V 2]]) (B (V 1 `Le` V 0))
+r12 = R (F "u" [V 0, V 1, V 2]) (F "return" [V 2]) (B (V 1 `Gt` V 0))
+--
+-- Rules sum2
+-- r20 = R (F "sum2" [V 0]) (F "v" [V 0, V 0, F "0" []]) (B TT)
+-- r21 = R (F "v" [V 0, V 1, V 2]) (F "return" [F "0" []]) (B (V 0 `Le` F "0" []))
+-- r22 = R (F "v" [V 0, V 1, V 2]) (F "v" [V 0, F "-" [V 1, F "1" []], F "+" [V 1, V 2]]) (B (V 0 `Gt` F "0" []) `And` B (V 1 `Gt` F "0" []))
+-- r23 = R (F "v" [V 0, V 1, V 2]) (F "return" [V 2]) (B (V 0 `Gt` F "0" []) `And` B (V 1 `Le` F "0" []))
 
 main :: IO ()
 main = do

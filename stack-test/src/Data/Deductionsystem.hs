@@ -57,7 +57,7 @@ import Prelude hiding (Left, Right)
 -- then getinstanceleft r e may (possibily) give the substitution tau such that
 -- g(y1,...,yi)*tau ~ f(x1,...,xn).
 -- Note that we do not consider the righthand side of the equation e (we have to do that separately).
--- If such a tau does not exist then getinstance r e = []. See Example 1 for the meaning of ~.
+-- If such a tau does not exist then getinstance r e = [].
 --
 -- Example 1
 -- r : f(v1,v1) -> g(v1)  [true]
@@ -72,7 +72,6 @@ import Prelude hiding (Left, Right)
 -- REMARK
 -- The lefthand side of r*s equals f(v5,v5), which (as a term) is not equal to f(v4,v5).
 -- However, the equality of these terms follows from the constraint.
--- We denote f(v5,v5)~f(v4,v5).
 --
 -- In getinstanceleftright we also equalize the right-hand sides of the rule with the equation.
 -- Example 2
