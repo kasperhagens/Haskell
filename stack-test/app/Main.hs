@@ -454,10 +454,16 @@ r11 = R (F "u" [V 0, V 1, V 2]) (F "u" [V 0, F "+" [V 1, F "1" []], F "+" [V 1, 
 r12 = R (F "u" [V 0, V 1, V 2]) (F "return" [V 2]) (B (V 1 `Gt` V 0))
 --
 -- Rules sum2
--- r20 = R (F "sum2" [V 0]) (F "v" [V 0, V 0, F "0" []]) (B TT)
--- r21 = R (F "v" [V 0, V 1, V 2]) (F "return" [F "0" []]) (B (V 0 `Le` F "0" []))
--- r22 = R (F "v" [V 0, V 1, V 2]) (F "v" [V 0, F "-" [V 1, F "1" []], F "+" [V 1, V 2]]) (B (V 0 `Gt` F "0" []) `And` B (V 1 `Gt` F "0" []))
--- r23 = R (F "v" [V 0, V 1, V 2]) (F "return" [V 2]) (B (V 0 `Gt` F "0" []) `And` B (V 1 `Le` F "0" []))
+r20 = R (F "sum2" [V 0]) (F "v" [V 0, V 0, F "0" []]) (B TT)
+r21 = R (F "v" [V 0, V 1, V 2]) (F "return" [F "0" []]) (B (V 0 `Le` F "0" []))
+r22 = R (F "v" [V 0, V 1, V 2]) (F "v" [V 0, F "-" [V 1, F "1" []], F "+" [V 1, V 2]]) (B (V 0 `Gt` F "0" []) `And` B (V 1 `Gt` F "0" []))
+r23 = R (F "v" [V 0, V 1, V 2]) (F "return" [V 2]) (B (V 0 `Gt` F "0" []) `And` B (V 1 `Le` F "0" []))
+
+rs = [r10, r11, r12, r20, r21, r22, r23]
+-- Equation sum1(x) = sum2(x) [True]
+e = E (F "sum1" [V 0]) (F "sum2" [V 0]) (B TT)
+eqs = [e]
+hs = []
 
 main :: IO ()
 main = do
