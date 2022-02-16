@@ -275,7 +275,8 @@ expansionSingleRule n s p (R l r psi) (eqs, hs) = do
                 )
             return (eqs, hs)
         else do
-            let tau = Map.fromList (equalize l (fromJust u)) -- If tau is empty then we cannot apply the rule to the subterm on position p.
+            let tau = Map.fromList (equalize l (fromJust u))
+            -- If tau is empty then we cannot apply the rule to the subterm on position p.
             if null tau
                 then do
                     putStrLn ("You cannot use "
@@ -291,6 +292,8 @@ expansionSingleRule n s p (R l r psi) (eqs, hs) = do
                     putStrLn " "
                     return (eqs, hs)
                 else do
+                    -- checkconstraint is true <=> phi implies psi*tau
+                    -- if checkconstraint holds then we do not need to expand on this rule (since we can do a simplification step).
                     checkconstraint <- uConstraintCheck (Or (N phi) (appsubC tau psi))
                     if checkconstraint
                         then do
@@ -306,10 +309,7 @@ expansionSingleRule n s p (R l r psi) (eqs, hs) = do
                                 show (fromJust u)
                                 )
                             putStrLn " "
-                            return (eqs, hs) -- if checkconstraint holds then we do not need to expand on this rule (since we can do a simplification step).
-                            --
-                            -- !!!QUESTION!!!
-                            -- OR DO WE STILL WANT TO HAVE THE POSIBILITY TO DO THIS? I CAN CHANGE THIS IF NEEDED
+                            return (eqs, hs)
                         else do
                             let adjustconstraint = And phi (appsubC tau psi)
                                 adjustequation = E a b adjustconstraint
@@ -317,7 +317,7 @@ expansionSingleRule n s p (R l r psi) (eqs, hs) = do
                         -- This check is really necessary: it can happen that the constraint phi is contradictory to tau*psi.
                             if checkadjustconstraint
                                 then do
-                                    let newequationleft = E (applyrule (R l r psi) a  p) b adjustconstraint
+                                    let newequationleft = E (applyrule (R l r psi) a p) b adjustconstraint
                                         newequationright = E a (applyrule (R l r psi) b p) adjustconstraint
                                     if s==Left
                                         then do
@@ -339,7 +339,7 @@ expansion n s p rs (eqs, hs) =
         else do
             (x,y) <- expansionSingleRule n s p (head rs) (eqs, hs)
             if (x,y) == (eqs, hs)
-                then -- in this case we cannot do expansion with rule head rs
+                then -- in this case we cannot do expansion with rule head rs, so we move on to the next rule in rs.
                     expansion n s p (tail rs) (eqs, hs)
                 else
                     if (null (tail rs)) --If rs contains only one rule then we return the same as expansionSingleRule
@@ -352,7 +352,7 @@ expansion n s p rs (eqs, hs) =
                                 neweqs = neweq : remeqs
                                 newhs = nub (newhyp : remhyps)
                                 -- If we don't use nub we may get multiple occurrences of a single hypothesis (one for each applicable rule).
-                                newpfst = (neweqs, newhs)
+                                newpfst = (delete (eqs !! n) neweqs, newhs)
                             return newpfst
 
 deletion :: Int -> Proofstate -> IO Proofstate
