@@ -326,7 +326,7 @@ expansionSingleRule n s p (R l r psi) (eqs, hs) = do
                                             return (neweqs, newhs)
                                         else do
                                             let neweqs = newequationright:delete (E a b phi) eqs
-                                                newhs = R a b phi:hs
+                                                newhs = R b a phi:hs
                                             return (neweqs, newhs)
                                 else
                                     return (eqs,hs)
