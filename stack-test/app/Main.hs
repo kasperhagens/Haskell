@@ -450,8 +450,8 @@ play rs (eqs, hs)
 --
 -- Rules sum1
 r10 = R (F "sum1" [V 0]) (F "u" [V 0, F "1" [], F "0" []]) (B TT)
-r11 = R (F "u" [V 0, V 1, V 2]) (F "u" [V 0, F "+" [V 1, F "1" []], F "+" [V 1, V 2]]) (B (V 1 `Le` V 0))
-r12 = R (F "u" [V 0, V 1, V 2]) (F "return" [V 2]) (B (V 1 `Gt` V 0))
+r11 = R (F "u" [V 0, V 1, V 2]) (F "u" [V 0, F "+" [V 1, F "1" []], F "+" [V 1, V 2]]) (B (V 0 `Ge` V 1))
+r12 = R (F "u" [V 0, V 1, V 2]) (F "return" [V 2]) (B (V 0 `Lt` V 1))
 --
 -- Rules sum2
 r20 = R (F "sum2" [V 0]) (F "v" [V 0, V 0, F "0" []]) (B TT)

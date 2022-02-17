@@ -311,7 +311,11 @@ expansionSingleRule n s p (R l r psi) (eqs, hs) = do
                             putStrLn " "
                             return (eqs, hs)
                         else do
-                            let adjustconstraint = And phi (appsubC tau psi)
+                            let adjustconstraint = if phi == B TT
+                                                    then
+                                                        appsubC tau psi
+                                                    else
+                                                        And phi (appsubC tau psi)
                                 adjustequation = E a b adjustconstraint
                             checkadjustconstraint <- uConstraintCheck (Or (N adjustconstraint) (appsubC tau psi))
                         -- This check is really necessary: it can happen that the constraint phi is contradictory to tau*psi.
