@@ -11,7 +11,6 @@ module Data.Deductionsystem (
     Side (..),
     Rules,
     Hypothesis,
-    showsimps,
     getinstanceleft,
     simplification,
     equationSide,
@@ -138,59 +137,6 @@ constraintEqImpRule (E e1 e2 ce) (R r1 r2 cr) =
             uConstraintCheck (Or (N ce) (appsubC tau cr))
     where tau = getinstanceleft (R r1 r2 cr) (E e1 e2 ce)
 
--- showsimps rs es = [(e,r,s) | e <- es, r <- rs such that we can do SIMPLIFICATION with r on side s of equation e]
--- Example
--- eqs : {sum1(v1)≈sum2(v1) [True], sum1(v1)≈sum3(v1) [True]}
--- rs : {sum1(v2) -> return(0) [v2 <= 0],  sum2(v2) -> u(v2,0,0) [TT]}
---
--- e0 = E (F "sum1" [V 1]) (F "sum2" [V 1]) (B TT)
--- e1 = E (F "sum1" [V 1]) (F "sum3" [V 1]) (B TT)
--- eqs = [e0, e1]
--- r0 = R (F "sum1" [V 2]) (F "return" [F "0" []]) (B (V 2 `Le` F "0" []))
--- r1 = R (F "sum2"[V 2]) (F "u" [V 2, F "0" [], F "0" []]) (B TT)
--- rs = [r0, r1]
--- showsimp rs eqs =
--- [(sum1(v1)~sum2(v1) [True],sum2(v2)->u(v2,0,0) [True],Right)]
-showsimpleft :: Rule -> Equations -> IO [(Equation, Rule)]
-showsimpleft r es =
-    if null es
-        then
-            return []
-        else
-            if not (null (getinstancesleft r (head es)))
-                then do
-                    check <- constraintEqImpRule (head es) r
-                    if check
-                        then do
-                            x <- showsimpleft r (tail es)
-                            return ((head es, r) : x)
-                        else
-                            showsimpleft r (tail es)
-                else
-                    showsimpleft r (tail es)
-
-showsimpsleft :: Rules -> Equations -> IO [(Equation, Rule)]
-showsimpsleft rs eqs =
-    if null rs
-        then
-            return []
-        else do
-            x <- showsimpleft (head rs) eqs
-            y <- showsimpsleft (tail rs) eqs
-            return (x ++ y)
-
-showsimpsright :: Rules -> Equations -> IO [(Equation, Rule)]
-showsimpsright rs eqs = showsimpsleft rs eqsrev
-                        where eqsrev = map reverseEQ eqs
-
-showsimps :: Rules -> Equations -> IO [(Equation, Rule, Side)]
-showsimps rs eqs = do
-    a <- showsimpsleft rs eqs
-    b <- showsimpsright rs eqs
-    let x = [(e, r, Left) | (e,r) <- a]
-        y = [(e, r, Right) | (e,r) <- b]
-    return (x ++ y)
-
 -- A proofstate as a tuple (E,H) where E is a set of equations and H is a set of induction hypothesis.
 type Proofstate = (Equations, Hypothesis)
 
@@ -251,7 +197,8 @@ simplification n s p r (eqs, hs) =
                                     where e1 = leftsideEQ (eqs!!n)
                                           e2 = applyrule r (rightsideEQ (eqs!!n)) p
                                           c = constraintEQ (eqs !! n)
-                        else
+                        else do
+                            putStrLn ("Cannot do simplification: the substitution " ++ (show tau) ++ " applied to " ++ show r ++ " does not yield an applicable rule. Proofstate has not been changed. \n")
                             return (eqs, hs)
 
 -- EXPANSION
@@ -315,7 +262,7 @@ expansionSingleRule n s p (R l r psi) (eqs, hs) = do
                                                     then
                                                         appsubC tau psi
                                                     else
-                                                        And phi (appsubC tau psi)
+                                                        And (appsubC tau psi) phi
                                 adjustequation = E a b adjustconstraint
                             checkadjustconstraint <- uConstraintCheck (Or (N adjustconstraint) (appsubC tau psi))
                         -- This check is really necessary: it can happen that the constraint phi is contradictory to tau*psi.

@@ -13,7 +13,6 @@ import Data.Deductionsystem (
     Proofstate,
     Side (..),
     Rules,
-    showsimps,
     simplification,
     equationSide,
     expansion,
@@ -462,7 +461,32 @@ r23 = R (F "v" [V 0, V 1, V 2]) (F "return" [V 2]) (B (V 0 `Gt` F "0" []) `And` 
 rs = [r10, r11, r12, r20, r21, r22, r23]
 -- Equation sum1(x) = sum2(x) [True]
 e = E (F "sum1" [V 0]) (F "sum2" [V 0]) (B TT)
-eqs = [e]
+lemma = E
+    (F "u" [V 0, V 1, V 2])
+    (F "v" [V 0, V 3, V 4])
+    (
+        B (F "+" [V 1, V 3] `Eq` F "+" [V 0, F "1" []])
+        `And`
+        B (F "-" [V 2, V 4] `Eq` F "*" [
+            F "-" [V 1, F "1" []],
+            F "-" [F "-" [V 1, V 0], F "1" []]
+            ])
+        `And`
+        B (F "+" [V 2, V 4] `Eq` F "*" [
+            F "-" [V 1, F "1" []],
+            F "+" [V 0, F "1" []]
+            ])
+        `And`
+        B (V 0 `Gt` F "0" [])
+        `And`
+        B (V 1 `Gt` F "0" [])
+        `And`
+        B (V 3 `Ge` F "0" [])
+        `And`
+        B (V 0 `Ge` F "-" [V 1, F "1"[]])
+    )
+
+eqs = [lemma, e]
 hs = []
 
 main :: IO ()
