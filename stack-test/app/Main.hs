@@ -18,7 +18,9 @@ import Data.Deductionsystem (
     expansion,
     deletion,
     eqdeletion,
-    generalization)
+    generalization,
+    moveToConstraint
+    )
 
 getNumbOfHoles :: String -> IO Int
 getNumbOfHoles message =
@@ -207,7 +209,11 @@ getStrategy message = do
                                             then
                                                 return "gen"
                                             else
-                                                getStrategy "Enter a valid strategy."
+                                                if map toLower str `elem` tail (inits "rename")
+                                                    then
+                                                        return "ren"
+                                                    else
+                                                        getStrategy "Enter a valid strategy."
 
 printEqs :: String -> [Equation] -> IO ()
 printEqs message eqs = do
@@ -386,13 +392,34 @@ interactiveGeneralization (eqs, hs) = do
     p <- getPosSubConstr "\nWhich of these subconstraints do you want to remove? Enter the corresponding number." (eqs !!n)
     generalization n p (eqs, hs)
 
+interactiveMoveToConstraint :: Proofstate -> IO Proofstate
+interactiveMoveToConstraint (eqs, hs) = do
+    putStrLn "Current proofstate:"
+    printPfst (eqs,hs)
+    n <- getEq "For which equation moving a subterm into the constraint?" eqs
+    print (eqs!!n)
+    putStrLn " "
+    s <- getLeftRight "On which side of this equation: Left or Right?"
+    print (equationSide (eqs !! n) s)
+    putStrLn " "
+    p <- getPosition (
+        "Enter the position of the subterm"
+        )
+    let u = postoterm (equationSide (eqs !! n) s) p
+    if isNothing u
+        then do
+            putStrLn "Invalid position, try again."
+            putStrLn " "
+            interactiveMoveToConstraint (eqs, hs)
+        else
+            moveToConstraint n s p (eqs, hs)
 
 playRound :: Rules -> Proofstate -> IO Proofstate
 playRound rs pfst = do
     putStrLn "Current proofstate:"
     putStrLn " "
     printPfst pfst
-    str <- getStrategy "Choose a strategy: Simplification, Expansion, Equation Deletion, Deletion or Generalization."
+    str <- getStrategy "Choose a strategy: Simplification, Expansion, Equation Deletion, Deletion or Generalization. Enter 'rename' to move a subterm into the constraint."
     putStrLn " "
     if str == "simp"
         then
@@ -410,7 +437,11 @@ playRound rs pfst = do
                                 then
                                     interactiveEqDeletion pfst
                                 else
-                                    interactiveGeneralization pfst
+                                    if str == "gen"
+                                        then
+                                            interactiveGeneralization pfst
+                                        else
+                                            interactiveMoveToConstraint pfst
 
 play :: Rules -> Proofstate -> IO Proofstate
 play rs (eqs, hs)

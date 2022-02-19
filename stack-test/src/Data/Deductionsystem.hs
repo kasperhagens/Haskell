@@ -18,7 +18,8 @@ module Data.Deductionsystem (
     expansion,
     deletion,
     eqdeletion,
-    generalization
+    generalization,
+    moveToConstraint
     ) where
 import qualified Data.Map as Map
 import Data.Terms (
