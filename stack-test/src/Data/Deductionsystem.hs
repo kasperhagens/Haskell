@@ -31,6 +31,7 @@ import Data.Terms (
     equalize,
     subterms,
     concatnoempties,
+    vars,
     mgu)
 import Data.Constraints
 import Data.Rules (
@@ -40,6 +41,7 @@ import Data.Rules (
     appsubR,
     applyrule,
     constraintR,
+    replace,
     replaceNthElt)
 import Data.Side
 import Data.List (delete, nub)
@@ -348,3 +350,33 @@ generalization n p (eqs, hs) = do
         newc = removeCstrAtPos c p
         neweq = E a b newc
     return (replaceNthElt eqs n neweq, hs)
+
+
+moveToConstraint :: Int -> Side -> Position -> Proofstate -> IO Proofstate
+moveToConstraint n s p (eqs, hs) = do
+    let E a b phi = eqs !! n
+        u = postoterm (equationSide (E a b phi) s) p
+    if isNothing u -- If u equals Nothing then side s of equation (E a b phi) has no subterm on position p.
+        then do
+            putStrLn (
+                    show (equationSide (E a b phi) s)
+                    ++
+                    " has no subterm on position "
+                    ++
+                    show p
+                    ++
+                    ". Proofstate has not been changed."
+                )
+            return (eqs, hs)
+        else do
+            let t = fromJust u
+                newvarname = maximum (vars a ++ vars b) + 1
+                newvar = V newvarname
+                addconstraint = B (newvar `Eq` t)
+                neweq =
+                    if (s == Left)
+                        then
+                            E (replace a p newvar) b (addconstraint `And` phi)
+                        else
+                            E a (replace b p newvar) (addconstraint `And` phi)
+            return (replaceNthElt eqs n neweq, hs)
