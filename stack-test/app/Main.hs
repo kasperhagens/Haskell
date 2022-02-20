@@ -540,26 +540,8 @@ lemma = E
 eqs = [lemma, e]
 hs = []
 
-
-testeq = E (F "0" []) (F "u" [V 0, F "+" [F "0" [], F "1" []], F "+" [F "0" [], F "0" []]]) (B (V 0 `Ge` F "0" []) `And` B (V 0 `Le` F "0" []))
-testrule = r22
-s = Data.Deductionsystem.Right
-p = []
-u = postoterm (equationSide testeq s) p
-t = fromJust u
-ce = constraintEQ testeq
-cr = constraintR testrule
-tau = Map.fromList (equalize (rightsideR testrule) (equationSide testeq (oppositeSide s)) ++ (equalize (leftsideR testrule) t))
-testrulesub = appsubR tau testrule
-
-e1 = leftsideEQ testeq
--- e2 = applyrule testrulesub (rightsideEQ testeq) p
-c = constraintEQ testeq
-
-checky = equalize (leftsideR testrulesub) (Data.Maybe.fromJust (postoterm (rightsideEQ testeq) p))
-
 main :: IO ()
 main = do
      printRules "Rules " rs "r"
      x <- play rs (eqs, hs)
-     print x
+     printPfst x
