@@ -478,21 +478,21 @@ play rs (eqs, hs)
 -- sum : Z -> N, defined by sum(n)= 1+...+n if n>=1 and sum(n)=0 otherwise.
 
 -- Rules sum1
-r10 = R (F "sum1" [V 0]) (F "0" []) (B (V 0 `Le` F "0" []))
-r11 = R (F "sum1" [V 0]) (F "+" [V 0, F "sum1" [F "-" [V 0, F "1" []]]]) (B (V 0 `Ge` F "0" []))
+-- r10 = R (F "sum1" [V 0]) (F "0" []) (B (V 0 `Le` F "0" []))
+-- r11 = R (F "sum1" [V 0]) (F "+" [V 0, F "sum1" [F "-" [V 0, F "1" []]]]) (B (V 0 `Ge` F "0" []))
 
 -- Rules sum2
-r20 = R (F "sum2" [V 0]) (F "u" [V 0, F "0" [], F "0" []]) (B TT)
-r21 = R (F "u" [V 0, V 1, V 2]) (F "u" [V 0, F "+" [V 1, F "1" []], F "+" [V 2, V 1]]) (B (V 0 `Ge` V 1))
-r22 = R (F "u" [V 0, V 1, V 2]) (V 2) (B (V 0 `Lt` V 1))
+-- r20 = R (F "sum2" [V 0]) (F "u" [V 0, F "0" [], F "0" []]) (B TT)
+-- r21 = R (F "u" [V 0, V 1, V 2]) (F "u" [V 0, F "+" [V 1, F "1" []], F "+" [V 2, V 1]]) (B (V 0 `Ge` V 1))
+-- r22 = R (F "u" [V 0, V 1, V 2]) (V 2) (B (V 0 `Lt` V 1))
 
-rs = [r10, r11, r20, r21, r22]
+-- rs = [r10, r11, r20, r21, r22]
 
-lemma = E (F "u" [V 0, V 1, V 2]) (F "+" [V 0, F "u" [V 3, V 1, V 2]]) (B(V 0 `Ge` V 1) `And` B(V 0 `Eq` F "+" [V 3, F "1" []]))
+-- lemma = E (F "u" [V 0, V 1, V 2]) (F "+" [V 0, F "u" [V 3, V 1, V 2]]) (B(V 0 `Ge` V 1) `And` B(V 0 `Eq` F "+" [V 3, F "1" []]))
 
-e = E (F "sum1" [V 0]) (F "sum2" [V 0]) (B TT)
-eqs = [e, lemma]
-hs = []
+-- e = E (F "sum1" [V 0]) (F "sum2" [V 0]) (B TT)
+-- eqs = [e, lemma]
+-- hs = []
 
 --Example 3
 -- A rewrite system corresponding to two imperative implementations (sum1 and sum2) of the function sum : Z -> N, where sum(n) = 0 + 1 + 2 + ... + n and sum(n)=0 for n<0. One of the two (sum1) will calculate it like
@@ -502,46 +502,43 @@ hs = []
 -- The equation e is the statement sum1(n) = sum2(n) [True]
 --
 -- Rules sum1
--- r10 = R (F "sum1" [V 0]) (F "u" [V 0, F "1" [], F "0" []]) (B TT)
--- r11 = R (F "u" [V 0, V 1, V 2]) (F "u" [V 0, F "+" [V 1, F "1" []], F "+" [V 1, V 2]]) (B (V 0 `Ge` V 1))
--- r12 = R (F "u" [V 0, V 1, V 2]) (F "return" [V 2]) (B (V 0 `Lt` V 1))
+r10 = R (F "sum1" [V 0]) (F "u" [V 0, F "1" [], F "0" []]) (B TT)
+r11 = R (F "u" [V 0, V 1, V 2]) (F "u" [V 0, F "+" [V 1, F "1" []], F "+" [V 1, V 2]]) (B (V 0 `Ge` V 1))
+r12 = R (F "u" [V 0, V 1, V 2]) (F "return" [V 2]) (B (V 0 `Lt` V 1))
 --
 -- Rules sum2
--- r20 = R (F "sum2" [V 0]) (F "v" [V 0, V 0, F "0" []]) (B TT)
--- r21 = R (F "v" [V 0, V 1, V 2]) (F "return" [F "0" []]) (B (V 0 `Le` F "0" []))
--- r22 = R (F "v" [V 0, V 1, V 2]) (F "v" [V 0, F "-" [V 1, F "1" []], F "+" [V 1, V 2]]) (B (V 0 `Gt` F "0" []) `And` B (V 1 `Gt` F "0" []))
--- r23 = R (F "v" [V 0, V 1, V 2]) (F "return" [V 2]) (B (V 0 `Gt` F "0" []) `And` B (V 1 `Le` F "0" []))
+r20 = R (F "sum2" [V 0]) (F "v" [V 0, V 0, F "0" []]) (B TT)
+r21 = R (F "v" [V 0, V 1, V 2]) (F "return" [F "0" []]) (B (V 0 `Le` F "0" []))
+r22 = R (F "v" [V 0, V 1, V 2]) (F "v" [V 0, F "-" [V 1, F "1" []], F "+" [V 1, V 2]]) (B (V 0 `Gt` F "0" []) `And` B (V 1 `Gt` F "0" []))
+r23 = R (F "v" [V 0, V 1, V 2]) (F "return" [V 2]) (B (V 0 `Gt` F "0" []) `And` B (V 1 `Le` F "0" []))
 
--- rs = [r10, r11, r12, r20, r21, r22, r23]
+rs = [r10, r11, r12, r20, r21, r22, r23]
 -- Equation sum1(x) = sum2(x) [True]
--- e = E (F "sum1" [V 0]) (F "sum2" [V 0]) (B TT)
--- lemma = E
---     (F "u" [V 0, V 1, V 2])
---     (F "v" [V 0, V 3, V 4])
---     (
---         B (F "+" [V 1, V 3] `Eq` F "+" [V 0, F "1" []])
---         `And`
---         B (F "-" [V 2, V 4] `Eq` F "*" [
---             F "-" [V 1, F "1" []],
---             F "-" [F "-" [V 1, V 0], F "1" []]
---             ])
---         `And`
---         B (F "+" [V 2, V 4] `Eq` F "*" [
---             F "-" [V 1, F "1" []],
---             F "+" [V 0, F "1" []]
---             ])
---         `And`
---         B (V 0 `Gt` F "0" [])
---         `And`
---         B (V 1 `Gt` F "0" [])
---         `And`
---         B (V 3 `Ge` F "0" [])
---         `And`
---         B (V 0 `Ge` F "-" [V 1, F "1"[]])
---     )
-
--- eqs = [lemma, e]
--- hs = []
+e = E (F "sum1" [V 0]) (F "sum2" [V 0]) (B TT)
+lemma = E
+    (F "u" [V 0, V 1, V 2])
+    (F "v" [V 0, V 3, V 4])
+    (
+    B (F "+" [V 1, V 3] `Eq` F "+" [V 0, F "1" []])
+    `And`
+    B (F "-" [V 2, V 4] `Eq` F "*" [
+       F "-" [V 1, F "1" []],
+       F "-" [F "-" [V 1, V 0], F "1" []]])
+    `And`
+    B (F "+" [V 2, V 4] `Eq` F "*" [
+       F "-" [V 1, F "1" []],
+       F "+" [V 0, F "1" []]])
+    `And`
+    B (V 0 `Gt` F "0" [])
+    `And`
+    B (V 1 `Gt` F "0" [])
+    `And`
+    B (V 3 `Ge` F "0" [])
+    `And`
+    B (V 0 `Ge` F "-" [V 1, F "1"[]])
+    )
+eqs = [lemma, e]
+hs = []
 
 
 testeq = E (F "0" []) (F "u" [V 0, F "+" [F "0" [], F "1" []], F "+" [F "0" [], F "0" []]]) (B (V 0 `Ge` F "0" []) `And` B (V 0 `Le` F "0" []))
