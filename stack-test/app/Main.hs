@@ -462,15 +462,15 @@ play rs (eqs, hs)
 -- The equation e is the statement sum(n)= n*(n+1)/n [n>=0]
 --
 --
--- r0 = R (F "sum" [V 0]) (F "error" []) (B (V 0 `Lt` F "0" []))
--- r1 = R (F "sum" [V 0]) (F "v" [V 0, F "sum" [F "-" [V 0, F "1" []]]]) (B (V 0 `Gt` F "0" []))
--- r2 = R (F "sum" [V 0]) (F "return" [F "0" []]) (B (V 0 `Eq` F "0" []))
--- r3 = R (F "v" [V 0, F "return" [V 1]]) (F "return" [F "+" [V 0, V 1]]) (B TT)
--- rs = [r0, r1, r2, r3]
--- e = E (F "sum" [V 0]) (F "return" [F "/" [F "*" [V 0, F "+" [V 0, F "1" []]], F "2" []]]) (B (V 0 `Ge` F "0" []))
--- eqs = [e]
--- pfst = (eqs, rs)
--- hs = []
+r0 = R (F "sum" [V 0]) (F "error" []) (B (V 0 `Lt` F "0" []))
+r1 = R (F "sum" [V 0]) (F "v" [V 0, F "sum" [F "-" [V 0, F "1" []]]]) (B (V 0 `Gt` F "0" []))
+r2 = R (F "sum" [V 0]) (F "return" [F "0" []]) (B (V 0 `Eq` F "0" []))
+r3 = R (F "v" [V 0, F "return" [V 1]]) (F "return" [F "+" [V 0, V 1]]) (B TT)
+rs = [r0, r1, r2, r3]
+e = E (F "sum" [V 0]) (F "return" [F "/" [F "*" [V 0, F "+" [V 0, F "1" []]], F "2" []]]) (B (V 0 `Ge` F "0" []))
+eqs = [e]
+pfst = (eqs, rs)
+hs = []
 
 
 -- Example 2 (from the seminar-document)
@@ -502,46 +502,48 @@ play rs (eqs, hs)
 -- The equation e is the statement sum1(n) = sum2(n) [True]
 --
 -- Rules sum1
-r10 = R (F "sum1" [V 0]) (F "u" [V 0, F "1" [], F "0" []]) (B TT)
-r11 = R (F "u" [V 0, V 1, V 2]) (F "u" [V 0, F "+" [V 1, F "1" []], F "+" [V 1, V 2]]) (B (V 0 `Ge` V 1))
-r12 = R (F "u" [V 0, V 1, V 2]) (F "return" [V 2]) (B (V 0 `Lt` V 1))
+--r10 = R (F "sum1" [V 0]) (F "u" [V 0, F "1" [], F "0" []]) (B TT)
+--r11 = R (F "u" [V 0, V 1, V 2]) (F "u" [V 0, F "+" [V 1, F "1" []], F "+" [V 1, V 2]]) (B (V 0 `Ge` V 1))
+--r12 = R (F "u" [V 0, V 1, V 2]) (F "return" [V 2]) (B (V 0 `Lt` V 1))
 --
 -- Rules sum2
-r20 = R (F "sum2" [V 0]) (F "v" [V 0, V 0, F "0" []]) (B TT)
-r21 = R (F "v" [V 0, V 1, V 2]) (F "return" [F "0" []]) (B (V 0 `Le` F "0" []))
-r22 = R (F "v" [V 0, V 1, V 2]) (F "v" [V 0, F "-" [V 1, F "1" []], F "+" [V 1, V 2]]) (B (V 0 `Gt` F "0" []) `And` B (V 1 `Gt` F "0" []))
-r23 = R (F "v" [V 0, V 1, V 2]) (F "return" [V 2]) (B (V 0 `Gt` F "0" []) `And` B (V 1 `Le` F "0" []))
+--r20 = R (F "sum2" [V 0]) (F "v" [V 0, V 0, F "0" []]) (B TT)
+--r21 = R (F "v" [V 0, V 1, V 2]) (F "return" [F "0" []]) (B (V 0 `Le` F "0" []))
+--r22 = R (F "v" [V 0, V 1, V 2]) (F "v" [V 0, F "-" [V 1, F "1" []], F "+" [V 1, V 2]]) (B (V 0 `Gt` F "0" []) `And` B (V 1 `Gt` F "0" []))
+--r23 = R (F "v" [V 0, V 1, V 2]) (F "return" [V 2]) (B (V 0 `Gt` F "0" []) `And` B (V 1 `Le` F "0" []))
 
-rs = [r10, r11, r12, r20, r21, r22, r23]
+--rs = [r10, r11, r12, r20, r21, r22, r23]
+
 -- Equation sum1(x) = sum2(x) [True]
-e = E (F "sum1" [V 0]) (F "sum2" [V 0]) (B TT)
-lemma = E
-    (F "u" [V 0, V 1, V 2])
-    (F "v" [V 0, V 3, V 4])
-    (
-    B (F "+" [V 1, V 3] `Eq` F "+" [V 0, F "1" []])
-    `And`
-    B (F "-" [V 2, V 4] `Eq` F "*" [
-       F "-" [V 1, F "1" []],
-       F "-" [F "-" [V 1, V 0], F "1" []]])
-    `And`
-    B (F "+" [V 2, V 4] `Eq` F "*" [
-       F "-" [V 1, F "1" []],
-       F "+" [V 0, F "1" []]])
-    `And`
-    B (V 0 `Gt` F "0" [])
-    `And`
-    B (V 1 `Gt` F "0" [])
-    `And`
-    B (V 3 `Ge` F "0" [])
-    `And`
-    B (V 0 `Ge` F "-" [V 1, F "1"[]])
-    )
-eqs = [lemma, e]
-hs = []
+--e = E (F "sum1" [V 0]) (F "sum2" [V 0]) (B TT)
+--lemma = E
+--    (F "u" [V 0, V 1, V 2])
+--    (F "v" [V 0, V 3, V 4])
+--    (
+--    B (F "+" [V 1, V 3] `Eq` F "+" [V 0, F "1" []])
+--    `And`
+--    B (F "-" [V 2, V 4] `Eq` F "*" [
+--       F "-" [V 1, F "1" []],
+--       F "-" [F "-" [V 1, V 0], F "1" []]])
+--    `And`
+--    B (F "+" [V 2, V 4] `Eq` F "*" [
+--       F "-" [V 1, F "1" []],
+--       F "+" [V 0, F "1" []]])
+--    `And`
+--    B (V 0 `Gt` F "0" [])
+--    `And`
+--    B (V 1 `Gt` F "0" [])
+--    `And`
+--    B (V 3 `Ge` F "0" [])
+--    `And`
+--    B (V 0 `Ge` F "-" [V 1, F "1"[]])
+--    )
+--eqs = [lemma, e]
+--hs = []
 
 main :: IO ()
 main = do
      printRules "Rules " rs "r"
      x <- play rs (eqs, hs)
+     putStrLn "\n"
      printPfst x
