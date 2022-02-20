@@ -72,9 +72,7 @@ replace (F f ts) (i:p) t
 applyrule :: Rule -> Term -> Position -> Term
 applyrule r t p
     | postoterm t p /= Nothing =
-    if equalize (leftsideR r) (Maybe.fromJust (postoterm t p)) /= []
-        then
-            replace t p a
-        else t
+    if (leftsideR r == Maybe.fromJust (postoterm t p)) || (equalize (leftsideR r) (Maybe.fromJust (postoterm t p)) /= []) then
+            replace t p a else t
     | otherwise = t
         where a = appsub (Map.fromList (equalize (leftsideR r) (Maybe.fromJust (postoterm t p)))) (rightsideR r)

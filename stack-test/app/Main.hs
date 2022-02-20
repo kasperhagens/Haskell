@@ -8,6 +8,7 @@ import Data.Constraints
 import Data.Zz
 import Data.Char
 import Data.List (inits, nub)
+import qualified Data.Map as Map
 import Data.Maybe
 import Data.Deductionsystem (
     Proofstate,
@@ -21,6 +22,7 @@ import Data.Deductionsystem (
     generalization,
     moveToConstraint
     )
+import Data.Side
 
 getNumbOfHoles :: String -> IO Int
 getNumbOfHoles message =
@@ -256,7 +258,7 @@ interactiveSimplification rs (eqs, hs) = do
     print (eqs!!n)
     putStrLn " "
     s <- getLeftRight "On which side of this equation to simplify: Left or Right?"
-    print (equationSide (eqs !! n) s)
+    putStrLn (show (equationSide (eqs !! n) s) ++ " [" ++ show (constraintEQ (eqs!!n)) ++ "]")
     putStrLn " "
     p <- getPosition (
         "Enter the position of the subterm"
@@ -273,7 +275,7 @@ interactiveSimplification rs (eqs, hs) = do
             interactiveSimplification rs (eqs, hs)
         else do
             let t = fromJust u
-            print t
+            putStrLn (show t ++ " [" ++ show (constraintEQ (eqs!!n)) ++ "]")
             putStrLn " "
             if null hs
                 then do
@@ -477,7 +479,7 @@ play rs (eqs, hs)
 
 -- Rules sum1
 r10 = R (F "sum1" [V 0]) (F "0" []) (B (V 0 `Le` F "0" []))
-r11 = R (F "sum1" [V 0]) (F "+" [V 0, F "sum" [F "-" [V 0, F "1" []]]]) (B (V 0 `Ge` F "0" []))
+r11 = R (F "sum1" [V 0]) (F "+" [V 0, F "sum1" [F "-" [V 0, F "1" []]]]) (B (V 0 `Ge` F "0" []))
 
 -- Rules sum2
 r20 = R (F "sum2" [V 0]) (F "u" [V 0, F "0" [], F "0" []]) (B TT)
@@ -488,7 +490,8 @@ rs = [r10, r11, r20, r21, r22]
 
 lemma = E (F "u" [V 0, V 1, V 2]) (F "+" [V 0, F "u" [V 3, V 1, V 2]]) (B(V 0 `Ge` V 1) `And` B(V 0 `Eq` F "+" [V 3, F "1" []]))
 
-eqs = [lemma]
+e = E (F "sum1" [V 0]) (F "sum2" [V 0]) (B TT)
+eqs = [e, lemma]
 hs = []
 
 --Example 3
@@ -540,9 +543,26 @@ hs = []
 -- eqs = [lemma, e]
 -- hs = []
 
+
+testeq = E (F "0" []) (F "u" [V 0, F "+" [F "0" [], F "1" []], F "+" [F "0" [], F "0" []]]) (B (V 0 `Ge` F "0" []) `And` B (V 0 `Le` F "0" []))
+testrule = r22
+s = Data.Deductionsystem.Right
+p = []
+u = postoterm (equationSide testeq s) p
+t = fromJust u
+ce = constraintEQ testeq
+cr = constraintR testrule
+tau = Map.fromList (equalize (rightsideR testrule) (equationSide testeq (oppositeSide s)) ++ (equalize (leftsideR testrule) t))
+testrulesub = appsubR tau testrule
+
+e1 = leftsideEQ testeq
+-- e2 = applyrule testrulesub (rightsideEQ testeq) p
+c = constraintEQ testeq
+
+checky = equalize (leftsideR testrulesub) (Data.Maybe.fromJust (postoterm (rightsideEQ testeq) p))
+
 main :: IO ()
 main = do
      printRules "Rules " rs "r"
      x <- play rs (eqs, hs)
      print x
-

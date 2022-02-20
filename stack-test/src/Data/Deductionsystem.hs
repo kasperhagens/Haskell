@@ -187,18 +187,19 @@ simplification n s p r (eqs, hs) =
                     let t = fromJust u
                         ce = constraintEQ (eqs !! n)
                         cr = constraintR r
-                        tau = Map.fromList (equalize (leftsideR r) t)
+                        tau = Map.fromList (equalize (rightsideR r) (equationSide (eqs!!n) (oppositeSide s)) ++ (equalize (leftsideR r) t))
                     checkconstraint <- uConstraintCheck (Or (N ce) (appsubC tau cr))
+                    putStrLn ("Simplification-substitution: " ++ show tau)
                     if checkconstraint
                         then
                             case s of
                                 Left -> return (replaceNthElt eqs n (E e1 e2 c), hs)
-                                    where e1 = applyrule r (leftsideEQ (eqs!!n)) p
+                                    where e1 = applyrule (appsubR tau r) (leftsideEQ (eqs!!n)) p
                                           e2 = rightsideEQ (eqs!!n)
                                           c = constraintEQ (eqs !! n)
                                 Right -> return (replaceNthElt eqs n (E e1 e2 c), hs)
                                     where e1 = leftsideEQ (eqs!!n)
-                                          e2 = applyrule r (rightsideEQ (eqs!!n)) p
+                                          e2 = applyrule (appsubR tau r) (rightsideEQ (eqs!!n)) p
                                           c = constraintEQ (eqs !! n)
                         else do
                             putStrLn ("Cannot do simplification: the substitution " ++ (show tau) ++ " applied to " ++ show r ++ " does not yield an applicable rule. Proofstate has not been changed. \n")
