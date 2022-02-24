@@ -525,25 +525,29 @@ lemma = E
     B (F "-" [V 2, V 4] `Eq` F "*" [
        F "-" [V 1, F "1" []],
        F "-" [F "-" [V 1, V 0], F "1" []]])
-    `And`
-    B (F "+" [V 2, V 4] `Eq` F "*" [
-       F "-" [V 1, F "1" []],
-       F "+" [V 0, F "1" []]])
+--    `And`
+--    B (F "+" [V 2, V 4] `Eq` F "*" [
+--       F "-" [V 1, F "1" []],
+--       F "+" [V 0, F "1" []]])
     `And`
     B (V 0 `Gt` F "0" [])
     `And`
     B (V 1 `Gt` F "0" [])
     `And`
     B (V 3 `Ge` F "0" [])
-    `And`
-    B (V 0 `Ge` F "-" [V 1, F "1"[]])
+--    `And`
+--    B (V 0 `Ge` F "-" [V 1, F "1"[]])
     )
 
-testlemma = E (F "u" [V 0, V 1, V 2]) (F "v" [V 0, V 3, V 4]) (B TT)
+testlemma = E (F "u" [V 0, V 1, V 2]) (F "v" [V 0, V 3, V 4]) (
+    B (V 0 `Gt` F "0" [])
+    `And`
+    B (V 1 `Le` F "0" [])
+    )
 eqs = [
-    lemma
+--    lemma
 --    e
---    testlemma
+    testlemma
     ]
 hs = []
 
