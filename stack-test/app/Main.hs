@@ -545,9 +545,9 @@ testlemma = E (F "u" [V 0, V 1, V 2]) (F "v" [V 0, V 3, V 4]) (
     B (V 1 `Le` F "0" [])
     )
 eqs = [
---    lemma
+    lemma
 --    e
-    testlemma
+--    testlemma
     ]
 hs = []
 
